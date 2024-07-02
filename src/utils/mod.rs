@@ -24,3 +24,7 @@ fn determine_file_type(input_file: &str) -> Result<FileType> {
         _ => Err("Unsupported file type".into()),
     }
 }
+
+fn determine_column_types() -> Result<()> {
+    Ok(())
+}
