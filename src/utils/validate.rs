@@ -15,8 +15,10 @@ pub fn validate_args(args: &Cli) -> Result<()> {
         return Err("URL is empty".into());
     }
 
-    // Check that there is a connection to the URL
-
+    // Check table is not empty
+    if args.table.is_empty() {
+        return Err("Table is empty".into());
+    }
 
     Ok(())
 

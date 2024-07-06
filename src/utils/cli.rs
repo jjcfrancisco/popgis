@@ -1,7 +1,8 @@
 use crate::Result;
 use crate::utils::{determine_file_type, FileType};
 use crate::utils::validate::validate_args;
-use crate::utils::geo::read_shapefile;
+use crate::utils::shp::{read_shapefile, determine_data_types};
+use crate::pg::{create_connection, create_table};
 
 use clap::Parser;
 
@@ -13,6 +14,12 @@ pub struct Cli {
 
     #[arg(short, long)]
     pub uri: String,
+
+    #[arg(short, long)]
+    pub table: String,
+
+    #[arg(short, long)]
+    pub schema: Option<String>,
 }
 
 pub fn run() -> Result<()> {
@@ -25,9 +32,13 @@ pub fn run() -> Result<()> {
             read_shapefile(&args.input)?
         }
         FileType::GeoJson => {
-            println!("GeoJson");
+            unimplemented!()
         }
     };
+    let config = determine_data_types(&args.input)?;
+    let mut client = create_connection(&args.uri)?;
+    create_table(&args.table, args.schema, &config, &mut client)?;
+    // Insert data into table using Rows
 
     Ok(())
 }
