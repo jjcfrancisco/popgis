@@ -2,8 +2,10 @@ use crate::Result;
 use postgres::types::Type;
 use shapefile::dbase::FieldValue;
 
+use crate::pg::binary_copy::Wkb;
 use crate::utils::to_geo;
 use crate::utils::{AcceptedTypes, NewTableTypes, Row, Rows};
+use wkb::geom_to_wkb;
 
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     let mut table_config: Vec<NewTableTypes> = Vec::new();
@@ -57,7 +59,6 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
 }
 
 pub fn read_shapefile(file_path: &str) -> Result<Rows> {
-    // Create a new vector that can hold any data type from below
     let mut rows = Rows::new();
     let mut reader = shapefile::Reader::from_path(file_path)?;
     for shape_record in reader.iter_shapes_and_records() {
@@ -95,9 +96,9 @@ pub fn read_shapefile(file_path: &str) -> Result<Rows> {
             }
         }
 
-        // Transform shape to geometry then push
-        let geometry = to_geo(&shape)?;
-        row.add(AcceptedTypes::Geometry(geometry));
+        let geom = to_geo(&shape)?;
+        let wkb = geom_to_wkb(&geom).expect("Failed to insert node into database");
+        row.add(AcceptedTypes::Geometry(Wkb { geometry: wkb }));
         rows.add(row);
     }
 

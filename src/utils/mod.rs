@@ -2,8 +2,8 @@ use crate::Result;
 use std::path::Path;
 use postgres::types::Type;
 use geo::Coord;
-use geo::geometry::Geometry;
 use shapefile::Shape;
+use crate::pg::binary_copy::Wkb;
 
 pub mod cli;
 pub mod shp;
@@ -15,10 +15,12 @@ pub struct NewTableTypes {
     pub data_type: Type,
 }
 
+#[derive(Debug)]
 pub struct Row {
     pub columns: Vec<AcceptedTypes>,
 }
 
+#[derive(Debug)]
 pub struct Rows {
     pub rows: Vec<Row>,
 }
@@ -42,13 +44,14 @@ impl Rows {
 }
 
 // Enum to hold accepted data types
-enum AcceptedTypes {
+#[derive(Debug)]
+pub enum AcceptedTypes {
     Int(i64),
-    Float(f64),
+    // Float(f64),
     Double(f64),
     Text(String),
     Bool(bool),
-    Geometry(Geometry<f64>),
+    Geometry(Wkb),
 }
 
 // Create enum of supported file types
@@ -69,10 +72,6 @@ fn determine_file_type(input_file: &str) -> Result<FileType> {
         "json" => Ok(FileType::GeoJson),
         _ => Err("Unsupported file type".into()),
     }
-}
-
-fn determine_column_types() -> Result<()> {
-    Ok(())
 }
 
 pub fn to_geo(shape: &Shape) -> Result<geo::Geometry<f64>> {
