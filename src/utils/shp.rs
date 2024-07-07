@@ -17,7 +17,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                 FieldValue::Numeric(_) => {
                     table_config.push(NewTableTypes {
                         column_name,
-                        data_type: Type::INT8,
+                        data_type: Type::FLOAT8,
                     });
                 }
                 FieldValue::Float(_) => {
@@ -68,7 +68,7 @@ pub fn read_shapefile(file_path: &str) -> Result<Rows> {
             match data_type {
                 FieldValue::Numeric(value) => {
                     if let Some(value) = value {
-                        row.add(AcceptedTypes::Int(value as i64));
+                        row.add(AcceptedTypes::Float(value));
                     }
                 }
                 FieldValue::Float(value) => {

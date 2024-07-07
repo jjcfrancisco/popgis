@@ -30,7 +30,7 @@ pub fn create_table(
                 query.push_str(&format!("{} INT,", column.column_name));
             }
             Type::FLOAT8 => {
-                query.push_str(&format!("{} DOUBLE,", column.column_name));
+                query.push_str(&format!("{} DOUBLE PRECISION,", column.column_name));
             }
             Type::TEXT => {
                 query.push_str(&format!("{} TEXT,", column.column_name));

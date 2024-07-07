@@ -22,7 +22,7 @@ pub struct Row {
 
 #[derive(Debug)]
 pub struct Rows {
-    pub rows: Vec<Row>,
+    pub row: Vec<Row>,
 }
 
 impl Row {
@@ -36,10 +36,10 @@ impl Row {
 
 impl Rows {
     pub fn new() -> Self {
-        Rows { rows: Vec::new() }
+        Rows { row: Vec::new() }
     }
     pub fn add(&mut self, row: Row) {
-        self.rows.push(row);
+        self.row.push(row);
     }
 }
 
@@ -47,7 +47,7 @@ impl Rows {
 #[derive(Debug)]
 pub enum AcceptedTypes {
     Int(i64),
-    // Float(f64),
+    Float(f64),
     Double(f64),
     Text(String),
     Bool(bool),

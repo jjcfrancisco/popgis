@@ -2,14 +2,14 @@ use crate::Result;
 use bytes::BytesMut;
 use postgres::types::to_sql_checked;
 use postgres::types::{IsNull, ToSql, Type};
-use std::error::Error;
 use postgres::Statement;
+use std::error::Error;
 
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::utils::{NewTableTypes, Rows};
 use crate::pg::crud::create_connection;
+use crate::utils::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
 pub struct Wkb {
@@ -74,13 +74,43 @@ pub fn insert_rows<'a>(
 
     println!("{:?}", types);
 
-    for row in rows.rows.iter() {
+    for row in rows.row.iter() {
         // Transform row into vector of ToSql
+        let mut vec: Vec<&(dyn ToSql + Sync)> = Vec::new();
+        for column in row.columns.iter() {
+            match column {
+                AcceptedTypes::Int(value) => {
+                    vec.push(value);
+                }
+                AcceptedTypes::Float(value) => {
+                    vec.push(value);
+                }
+                AcceptedTypes::Double(value) => {
+                    vec.push(value);
+                }
+                AcceptedTypes::Text(value) => {
+                    vec.push(value);
+                }
+                AcceptedTypes::Bool(value) => {
+                    vec.push(value);
+                }
+                AcceptedTypes::Geometry(value) => {
+                    vec.push(value);
+                }
+            }
+        }
 
-        // writer
-        //     .write(&[&row])
-        //     .expect("Failed to insert row into database");
+        // Convert the vector to a slice of references
+        let vec_slice: &[&(dyn ToSql + Sync)] = &vec;
+
+        // Write row to database
+        writer
+            .write(vec_slice)
+            .expect("Failed to insert row into database");
     }
+
+    // Finish writing
+    writer.finish()?;
 
     Ok(())
 }
