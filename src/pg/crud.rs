@@ -4,11 +4,17 @@ use postgres::Statement;
 
 use postgres::{Client, NoTls};
 
-use crate::utils::NewTableTypes;
+use crate::file_types::common::NewTableTypes;
 
 pub fn create_connection(uri: &str) -> Result<Client> {
     let client = Client::connect(uri, NoTls)?;
     Ok(client)
+}
+
+pub fn create_schema(schema_name: &str, uri: &str) -> Result<()> {
+    let mut client = create_connection(uri)?;
+    client.batch_execute(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema_name))?;
+    Ok(())
 }
 
 pub fn create_table(

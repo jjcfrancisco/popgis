@@ -9,7 +9,7 @@ use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
 use crate::pg::crud::create_connection;
-use crate::utils::{AcceptedTypes, NewTableTypes, Rows};
+use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
 pub struct Wkb {
@@ -72,36 +72,37 @@ pub fn insert_rows<'a>(
 
     let mut writer = BinaryCopyInWriter::new(writer, &types);
 
-    println!("{:?}", types);
+    // Use to test if types are correct
+    // println!("{:?}", types);
 
     for row in rows.row.iter() {
         // Transform row into vector of ToSql
-        let mut vec: Vec<&(dyn ToSql + Sync)> = Vec::new();
+        let mut tosql: Vec<&(dyn ToSql + Sync)> = Vec::new();
         for column in row.columns.iter() {
             match column {
                 AcceptedTypes::Int(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
                 AcceptedTypes::Float(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
                 AcceptedTypes::Double(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
                 AcceptedTypes::Text(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
                 AcceptedTypes::Bool(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
                 AcceptedTypes::Geometry(value) => {
-                    vec.push(value);
+                    tosql.push(value);
                 }
             }
         }
 
         // Convert the vector to a slice of references
-        let vec_slice: &[&(dyn ToSql + Sync)] = &vec;
+        let vec_slice: &[&(dyn ToSql + Sync)] = &tosql;
 
         // Write row to database
         writer

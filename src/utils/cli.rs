@@ -1,8 +1,8 @@
 use crate::Result;
-use crate::utils::{determine_file_type, FileType};
+use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
-use crate::utils::shp::{read_shapefile, determine_data_types};
-use crate::pg::crud::create_table;
+use crate::file_types::shapefile::{read_shapefile, determine_data_types};
+use crate::pg::crud::{create_table, create_schema};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 
 use clap::Parser;
@@ -37,6 +37,10 @@ pub fn run() -> Result<()> {
         }
     };
     let config = determine_data_types(&args.input)?;
+    // If schema present, create schema
+    if let Some(schema) = &args.schema {
+        create_schema(&schema, &args.uri)?;
+    }
     let stmt = create_table(&args.table, &args.schema, &config, &args.uri)?;
     let geom_type = infer_geom_type(stmt)?;
     insert_rows(&rows, &config, geom_type, &args.uri, &args.schema, &args.table)?;
