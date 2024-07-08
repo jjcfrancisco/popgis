@@ -1,5 +1,5 @@
 # popgis
-A blazing fast way to insert Shapefiles & GeoJSON into a PostGIS database.
+A blazing fast way to insert GeoJSON & ShapeFile into a PostGIS database.
 
 ## Install
 *Upcoming...*
