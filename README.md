@@ -20,9 +20,6 @@ popgis --input water_polygons.shp \
        --table waters
 ```
 
-## License
-See [`LICENSE`](./LICENSE)
-
 ## Benchmarks
 *Upcoming...*
 
@@ -35,3 +32,6 @@ The list below contains the upcoming implementations.
 To do:
 
 * Allow GeoJSON as input.
+
+## License
+See [`LICENSE`](./LICENSE)
