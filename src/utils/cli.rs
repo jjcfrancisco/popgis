@@ -7,18 +7,24 @@ use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 
 use clap::Parser;
 
+/// A blazing fast way to insert GeoJSON & ShapeFiles into a PostGIS database 
 #[derive(Parser, Debug)]
 #[command(about, version)]
 pub struct Cli {
+
+    /// Input file path, either shapefile or geojson
     #[arg(short, long)]
     pub input: String,
 
+    /// PostgreSQL URI
     #[arg(short, long)]
     pub uri: String,
 
+    /// Table name
     #[arg(short, long)]
     pub table: String,
 
+    /// Schema name to create table in. Optional.
     #[arg(short, long)]
     pub schema: Option<String>,
 }
