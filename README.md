@@ -1,18 +1,26 @@
 # popgis
 A blazing fast way to insert GeoJSON & ShapeFile into a PostGIS database.
 
-## Install
-*Upcoming...*
+## Installation
+```bash
+brew tap jjcfrancisco/popgis
+brew install popgis
+```
 
 ## Usage
-Required flags are `input`, `uri` & `table`.
+`input`, `uri` & `table` are required; `schema` is optional.
 
-1. Use the **input** flag to choose the *shapefile* or *geojson* file to insert into a PostGIS database.
-2. Use the **uri** flag to tell `popgis` the PostGIS database where you'd like to insert the input data.
-3. The **schema** you would like to insert the table. This is optional.
-4. The **table** flag is for choosing the name of the resulting table. If no `schema` is provided, the table is created in the *public* schema.
+**Flags**
 
-## Examples
+`input`: choose the *shapefile* or *geojson* file to insert into a PostGIS database.
+
+`uri`: the PostGIS database where you'd like to insert the input data.
+
+`schema`: where you would like to insert the table. *This is optional.*
+
+`table`: choose the name of the resulting table. *Default is public*.
+
+**Example**
 ```bash
 popgis --input water_polygons.shp \
        --uri  postgresql://my_username:my_password@localhost:5432/my_database \
