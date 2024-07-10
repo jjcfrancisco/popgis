@@ -51,6 +51,7 @@ pub enum AcceptedTypes {
 }
 
 // Create enum of supported file types
+#[derive(Debug)]
 pub enum FileType {
     Shapefile,
     GeoJson,
@@ -65,7 +66,7 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
         .expect("Could not convert file extension to string");
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
-        "json" => Ok(FileType::GeoJson),
+        "geojson" => Ok(FileType::GeoJson),
         _ => Err("Unsupported file type".into()),
     }
 }

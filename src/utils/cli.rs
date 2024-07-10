@@ -1,7 +1,8 @@
 use crate::Result;
 use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
-use crate::file_types::shapefile::{read_shapefile, determine_data_types};
+use crate::file_types::shapefile;
+use crate::file_types::geojson;
 use crate::pg::crud::{create_table, create_schema};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 
@@ -34,15 +35,14 @@ pub fn run() -> Result<()> {
     validate_args(&args)?;
 
     let file_type = determine_file_type(&args.input)?;
-    let rows = match file_type {
+    let (rows, config) = match file_type {
         FileType::Shapefile => {
-            read_shapefile(&args.input)?
+            (shapefile::read_shapefile(&args.input)?, shapefile::determine_data_types(&args.input)?)
         }
         FileType::GeoJson => {
-            unimplemented!()
+            (geojson::read_geojson(&args.input)?, geojson::determine_data_types(&args.input)?)
         }
     };
-    let config = determine_data_types(&args.input)?;
     // If schema present, create schema
     if let Some(schema) = &args.schema {
         create_schema(&schema, &args.uri)?;
