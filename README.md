@@ -12,16 +12,23 @@ brew install popgis
 
 **Flags**
 
-`input`: choose the *shapefile* or *geojson* file to insert into a PostGIS database.
+`input`: choose the *geojson* or *shapefile* file to insert into a PostGIS database.
 
 `uri`: the PostGIS database where you'd like to insert the input data.
 
-`schema`: where you would like to insert the table. *This is optional.*
+`schema`: where you would like the specified table. **This is optional**. *Default is public.*
 
-`table`: choose the name of the resulting table. *Default is public*.
+`table`: choose the name of the resulting table.
 
-**Example**
+**Examples**
 ```bash
+## GeoJSON -> PostGIS ##
+popgis --input spain.geojson \
+       --uri  postgresql://my_username:my_password@localhost:5432/my_database \
+       --schema osm \
+       --table waters
+
+## ShapeFile -> PostGIS ##
 popgis --input water_polygons.shp \
        --uri  postgresql://my_username:my_password@localhost:5432/my_database \
        --schema osm \
@@ -31,15 +38,12 @@ popgis --input water_polygons.shp \
 ## Benchmarks
 *Upcoming...*
 
-## Limitations
-Currently, only ShapeFile files are implemented.
-
 ## Future implementation
 The list below contains the upcoming implementations.
 
 To do:
 
-* Allow GeoJSON as input.
+* <del>Allow GeoJSON as input.</del>
 
 ## License
 See [`LICENSE`](./LICENSE)
