@@ -46,3 +46,74 @@ pub fn to_geo(shape: &Shape) -> Result<geo::Geometry<f64>> {
         _ => Err("Unsupported shape type".into()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use shapefile::{Point, Polyline};
+
+    #[test]
+    fn test_to_geo_point() {
+        let shape = Shape::Point(shapefile::Point::new(1.0, 2.0));
+        let geo = to_geo(&shape).unwrap();
+        assert_eq!(geo, geo::Geometry::Point(geo::Point::new(1.0, 2.0)));
+    }
+
+    #[test]
+    fn test_to_geo_line() {
+        let first_part = vec![
+            Point::new(1.0, 1.0),
+            Point::new(2.0, 2.0),
+        ];
+
+        let second_part = vec![
+            Point::new(3.0, 1.0),
+            Point::new(5.0, 6.0),
+        ];
+
+        let poly = Polyline::with_parts(vec![first_part, second_part]);
+        let shape = Shape::Polyline(poly);
+        let geo = to_geo(&shape).unwrap();
+        let expected = geo::Geometry::LineString(geo::LineString::from(vec![
+            Coord::from((1.0, 1.0)),
+            Coord::from((2.0, 2.0)),
+            Coord::from((3.0, 1.0)),
+            Coord::from((5.0, 6.0)),
+        ]));
+        assert_eq!(geo, expected);
+    }
+
+    #[test]
+    fn test_to_geo_poly() {
+
+        let first_part = vec![
+            Point::new(1.0, 1.0),
+            Point::new(2.0, 2.0),
+        ];
+
+        let second_part = vec![
+            Point::new(3.0, 1.0),
+            Point::new(5.0, 6.0),
+        ];
+
+        let third_part = vec![
+            Point::new(17.0, 15.0),
+            Point::new(18.0, 19.0),
+            Point::new(20.0, 19.0),
+        ];
+        let poly = Polyline::with_parts(vec![first_part, second_part, third_part]);
+        let shape = Shape::Polyline(poly);
+        let geo = to_geo(&shape).unwrap();
+        let expected = geo::Geometry::LineString(geo::LineString::from(vec![
+            Coord::from((1.0, 1.0)),
+            Coord::from((2.0, 2.0)),
+            Coord::from((3.0, 1.0)),
+            Coord::from((5.0, 6.0)),
+            Coord::from((17.0, 15.0)),
+            Coord::from((18.0, 19.0)),
+            Coord::from((20.0, 19.0)),
+        ]));
+        assert_eq!(geo, expected);
+
+    }
+}

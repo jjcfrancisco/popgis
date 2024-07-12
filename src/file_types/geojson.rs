@@ -49,6 +49,13 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     data_type: Type::BOOL,
                                 });
                             }
+                            // If null
+                            serde_json::Value::Null => {
+                                table_config.push(NewTableTypes {
+                                    column_name: key,
+                                    data_type: Type::TEXT,
+                                });
+                            }
                             _ => println!("Type currently not supported"),
                         }
                     }
@@ -91,6 +98,9 @@ pub fn read_geojson(file_path: &str) -> Result<Rows> {
                         serde_json::Value::Bool(boolean) => {
                             row.add(AcceptedTypes::Bool(Some(boolean)));
                         }
+                        serde_json::Value::Null => {
+                            row.add(AcceptedTypes::Text(None));
+                        }
                         _ => println!("Type currently not supported"),
                     }
                 }
@@ -109,4 +119,31 @@ pub fn read_geojson(file_path: &str) -> Result<Rows> {
     }
 
     Ok(rows)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_determine_data_types() {
+        let file_path = "examples/geojson/spain.geojson";
+        let data_types = determine_data_types(file_path).unwrap();
+        assert_eq!(data_types.len(), 3);
+        for data_type in data_types {
+            match data_type.column_name.as_str() {
+                "source" => assert_eq!(data_type.data_type, Type::TEXT),
+                "id" => assert_eq!(data_type.data_type, Type::TEXT),
+                "name" => assert_eq!(data_type.data_type, Type::TEXT),
+                _ => (),
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_geojson() {
+        let file_path = "examples/geojson/spain.geojson";
+        let rows = read_geojson(file_path).unwrap();
+        assert_eq!(rows.row.len(), 19);
+    }
 }

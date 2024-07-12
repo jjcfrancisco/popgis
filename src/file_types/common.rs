@@ -51,7 +51,7 @@ pub enum AcceptedTypes {
 }
 
 // Create enum of supported file types
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum FileType {
     Shapefile,
     GeoJson,
@@ -71,3 +71,15 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_determine_file_type() {
+        let shapefile = "examples/shapefile/andalucia.shp";
+        let geojson = "examples/geojson/spain.geojson";
+        assert_eq!(determine_file_type(shapefile).unwrap(), FileType::Shapefile);
+        assert_eq!(determine_file_type(geojson).unwrap(), FileType::GeoJson);
+    }
+}

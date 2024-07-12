@@ -28,11 +28,20 @@ pub struct Cli {
     /// Schema name to create table in. Optional.
     #[arg(short, long)]
     pub schema: Option<String>,
+
+    /// Srid, if not provided, will default to 4326
+    #[arg(long)]
+    pub srid: Option<i32>,
 }
 
 pub fn run() -> Result<()> {
-    let args = Cli::parse();
+    let mut args = Cli::parse();
     validate_args(&args)?;
+
+    // If not provided srid will default to 4326
+    if args.srid.is_none() {
+        args.srid.get_or_insert(4326);
+    }
 
     let file_type = determine_file_type(&args.input)?;
     let (rows, config) = match file_type {
@@ -47,7 +56,11 @@ pub fn run() -> Result<()> {
     if let Some(schema) = &args.schema {
         create_schema(&schema, &args.uri)?;
     }
-    let stmt = create_table(&args.table, &args.schema, &config, &args.uri)?;
+    let stmt = if let Some(srid) = args.srid {
+        create_table(&args.table, &args.schema, &config, &args.uri, srid)?
+    } else {
+        create_table(&args.table, &args.schema, &config, &args.uri, 4326)?
+    };
     let geom_type = infer_geom_type(stmt)?;
     insert_rows(&rows, &config, geom_type, &args.uri, &args.schema, &args.table)?;
 

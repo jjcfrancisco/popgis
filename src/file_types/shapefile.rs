@@ -96,3 +96,29 @@ pub fn read_shapefile(file_path: &str) -> Result<Rows> {
 
     Ok(rows)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_determine_data_types() {
+        let file_path = "examples/shapefile/andalucia.shp";
+        let data_types = determine_data_types(file_path).unwrap();
+        assert_eq!(data_types.len(), 2);
+        for data_type in data_types {
+            if data_type.column_name == "x" {
+                assert_eq!(data_type.data_type, Type::FLOAT8);
+            } else if data_type.column_name == "y" {
+                assert_eq!(data_type.data_type, Type::FLOAT8);
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_shapefile() {
+        let file_path = "examples/shapefile/andalucia.shp";
+        let rows = read_shapefile(file_path).unwrap();
+        assert_eq!(rows.row.len(), 36);
+    }
+}

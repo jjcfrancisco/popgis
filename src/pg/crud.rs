@@ -22,6 +22,7 @@ pub fn create_table(
     schema_name: &Option<String>,
     config: &Vec<NewTableTypes>,
     uri: &str,
+    srid: i32,
 ) -> Result<Statement> {
     let mut query = String::from("CREATE TABLE IF NOT EXISTS ");
     if let Some(schema) = schema_name {
@@ -47,7 +48,7 @@ pub fn create_table(
             _ => println!("Type currently not supported"),
         }
     }
-    query.push_str("geom Geometry(Geometry, 4326)");
+    query.push_str(&format!("geom Geometry(Geometry, {})", srid));
     query.push_str(");");
     println!("{}", query);
 
