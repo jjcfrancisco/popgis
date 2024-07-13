@@ -75,6 +75,7 @@ To do:
 
 * Allow nested GeoJSON properties.
 * Improve stdout.
+* Modes: create, overwrite & append.
 * <del>Allow GeoJSON as input.</del>
 
 ## License
