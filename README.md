@@ -3,7 +3,7 @@ A blazing fast way to insert large GeoJSON & ShapeFile into a PostGIS database.
 
 ## Why?
 
-Loading large datasets into a PostGIS database can take a long time and reducing the completion time of such jobs time was the main aim of this project. `popgis` can be **x2 faster than ogr2ogr** and it's most noticeable when the input file is very large (with small dataset the performance increase is not as obvious) but also when working against non-local databases.
+Loading large datasets into a PostGIS database can take a long time and improving the performance of such jobs was the main aim of this project. **`popgis` can be x2 faster than ogr2ogr**. This is most noticeable when the input file is very large and working against non-local databases. For small dataset the performance increase isn't noteworthy.
 
 ## Installation
 You can install `popgis` via `Cargo` or `Homebrew`. Choose one option from below:
