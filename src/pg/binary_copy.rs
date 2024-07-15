@@ -8,7 +8,7 @@ use std::error::Error;
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::pg::crud::create_connection;
+use crate::pg::create::create_connection;
 use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
@@ -34,13 +34,13 @@ impl ToSql for Wkb {
 }
 
 pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
-    let column = stmt.columns().get(0).expect("Failed to get columns");
+    let column = stmt.columns().first().expect("Failed to get columns");
     Ok(column.type_().clone())
 }
 
-pub fn insert_rows<'a>(
+pub fn insert_rows(
     rows: &Rows,
-    config: &Vec<NewTableTypes>,
+    config: &[NewTableTypes],
     geom_type: Type,
     uri: &str,
     schema: &Option<String>,
@@ -61,7 +61,7 @@ pub fn insert_rows<'a>(
     if let Some(schema) = schema {
         query.push_str(&format!("{}.{}", schema, table));
     } else {
-        query.push_str(&table);
+        query.push_str(table);
     }
     query.push_str(" (");
     for column in config.iter() {

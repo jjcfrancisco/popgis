@@ -10,7 +10,7 @@ use wkb::geom_to_wkb;
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     let mut table_config: Vec<NewTableTypes> = Vec::new();
     let mut reader = shapefile::Reader::from_path(file_path)?;
-    for shape_record in reader.iter_shapes_and_records() {
+    if let Some(shape_record) = reader.iter_shapes_and_records().next() {
         let (_, record) = shape_record.unwrap();
         for (column_name, data_type) in record.into_iter() {
             match data_type {
@@ -53,7 +53,6 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                 _ => println!("Type currently not supported"),
             }
         }
-        break;
     }
     Ok(table_config)
 }

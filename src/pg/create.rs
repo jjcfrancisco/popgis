@@ -20,7 +20,7 @@ pub fn create_schema(schema_name: &str, uri: &str) -> Result<()> {
 pub fn create_table(
     table_name: &str,
     schema_name: &Option<String>,
-    config: &Vec<NewTableTypes>,
+    config: &[NewTableTypes],
     uri: &str,
     srid: i32,
 ) -> Result<Statement> {
@@ -28,9 +28,9 @@ pub fn create_table(
     if let Some(schema) = schema_name {
         query.push_str(&format!("{}.{} ", schema, table_name));
     } else {
-        query.push_str(&table_name);
+        query.push_str(table_name);
     }
-    query.push_str("(");
+    query.push('(');
     for column in config.iter() {
         match column.data_type {
             Type::INT8 => {

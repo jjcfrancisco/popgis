@@ -3,7 +3,7 @@ use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
 use crate::file_types::shapefile;
 use crate::file_types::geojson;
-use crate::pg::crud::{create_table, create_schema};
+use crate::pg::create::{create_table, create_schema};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 
 use clap::Parser;
@@ -54,7 +54,7 @@ pub fn run() -> Result<()> {
     };
     // If schema present, create schema
     if let Some(schema) = &args.schema {
-        create_schema(&schema, &args.uri)?;
+        create_schema(schema, &args.uri)?;
     }
     let stmt = if let Some(srid) = args.srid {
         create_table(&args.table, &args.schema, &config, &args.uri, srid)?

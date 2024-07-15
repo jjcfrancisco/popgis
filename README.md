@@ -1,22 +1,32 @@
-# popgis
+# PopGIS
 A blazing fast way to insert large GeoJSON & ShapeFile into a PostGIS database.
 
 ## Why?
-
-Loading large datasets into a PostGIS database can take a long time and improving the performance of such jobs was the main aim of this project. **`popgis` can be x2 faster than ogr2ogr**. This is most noticeable when the input file is very large and working against non-local databases. For small dataset the performance increase isn't noteworthy.
+Importing large datasets into a PostGIS database can take a long time and the aim of Popgis is to optimize the performance of such operations. **Popgis can be up to twice as fast as ogr2ogr**, particularly with very large input files against remote databases. Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
 
 ## Installation
-You can install `popgis` via `Cargo` or `Homebrew`. Choose one option from below:
+
+### Binary
+For binary distributions see the table below
+
+| Platform | x64 | ARM-64 |
+|----------|-----|--------|
+| Linux    |     |        |
+| macOS    |     |        |
+| Windows  |     |        |
 
 ### Cargo
+If you prefer using Cargo, you can install Popgis directly by running the Cargo install command
 ```bash
 cargo install popgis
 ```
 
 ### Homebrew
+For macOS users with Homebrew, you can install Popgis by adding the appropriate Homebrew tap
 ```bash
 brew tap jjcfrancisco/popgis
 brew install popgis
+popgis --help
 ```
 
 ## Usage

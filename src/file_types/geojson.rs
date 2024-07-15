@@ -22,8 +22,8 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
             //     column_name: "id".to_string(),
             //     data_type: Type::INT8,
             // });
-            if features.len() > 0 {
-                let properties = features.get(0);
+            if !features.is_empty() {
+                let properties = features.first();
                 if properties.is_some() {
                     for (key, value) in properties.unwrap().properties.clone().unwrap().into_iter()
                     {
