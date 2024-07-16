@@ -106,9 +106,7 @@ mod tests {
         let data_types = determine_data_types(file_path).unwrap();
         assert_eq!(data_types.len(), 2);
         for data_type in data_types {
-            if data_type.column_name == "x" {
-                assert_eq!(data_type.data_type, Type::FLOAT8);
-            } else if data_type.column_name == "y" {
+            if data_type.column_name == "x" || data_type.column_name == "y"{
                 assert_eq!(data_type.data_type, Type::FLOAT8);
             }
         }
