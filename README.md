@@ -32,7 +32,7 @@ popgis --help
 ## Usage
 `input`, `uri` & `table` are required; `schema` & `srid` are optional.
 
-**Flags**
+#### Flags
 
 `input` (short: `-i`): choose the *geojson* or *shapefile* file to insert into a PostGIS database.
 
@@ -44,7 +44,9 @@ popgis --help
 
 `srid`: choose either 4326 (WGS84) or 3857 (Web Mercator).  **Optional**. *Default is 4326.*
 
-**Examples**
+`mode`: choose either **overwrite**, **append** or **fail** modes. Read more [here](#modes).
+
+#### Examples
 ```bash
 ## GeoJSON -> PostGIS ##
 popgis --input spain.geojson \
@@ -59,6 +61,9 @@ popgis -i water_polygons.shp \
        -s osm \
        -t waters
 ```
+
+#### Modes
+The **overwrite** mode will delete existing table if name of schema/table is the same and will write into the new table. The **append** mode only inserts new data into the existing table. The **fail** mode, it ensures that if the table already exists in the database, the job will fail to prevent data loss.
 
 ## Benchmarks
 Although non extensive, the benchmarking shows **Popgis is twice faster than ogr2ogr**. This is most noticeable with large files.
@@ -88,7 +93,7 @@ To do:
 
 * Allow nested GeoJSON properties.
 * <del>Improve stdout.</del>
-* Modes: create, overwrite & append.
+* <del>Modes: create, overwrite & append.</del>
 * <del>Allow GeoJSON as input.</del>
 
 ## License
