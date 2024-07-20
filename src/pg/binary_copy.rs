@@ -8,7 +8,7 @@ use std::error::Error;
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::pg::create::create_connection;
+use crate::pg::crud::create_connection;
 use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
@@ -73,7 +73,11 @@ pub fn insert_rows(
     let mut writer = BinaryCopyInWriter::new(writer, &types);
 
     // Use to test if types are correct
-    // println!("{:?}", types);
+    if std::env::var("DEBUG").is_ok() {
+        println!("DEBUG || {:?}", types);
+    }
+
+    println!("Inserting data into database...");
 
     for row in rows.row.iter() {
         // Transform row into vector of ToSql
@@ -107,11 +111,13 @@ pub fn insert_rows(
         // Write row to database
         writer
             .write(vec_slice)
-            .expect("Failed to insert row into database");
+            .expect("Failed to insert row into database ✘");
     }
 
     // Finish writing
     writer.finish()?;
+
+    println!("Data sucessfully inserted into database ✓");
 
     Ok(())
 }
