@@ -7,23 +7,23 @@ pub fn validate_args(args: &Cli) -> Result<()> {
 
     // Check input file exists
     if !Path::new(&args.input).exists() {
-        return Err("Input file does not exist".into());
+        return Err("Input file does not exist ✘".into());
     }
 
     // Check URL is not empty
     if args.uri.is_empty() {
-        return Err("URL is empty".into());
+        return Err("URL is empty ✘".into());
     }
 
     // Check table is not empty
     if args.table.is_empty() {
-        return Err("Table is empty".into());
+        return Err("Table is empty ✘".into());
     }
 
     // Check if srid is 4326 or 3857
     if let Some(srid) = args.srid {
         if srid != 4326 && srid != 3857 {
-            return Err("SRID must be 4326 or 3857".into());
+            return Err("SRID must be 4326 or 3857 ✘".into());
         }
     }
 
@@ -44,6 +44,7 @@ mod tests {
             table: "points".to_string(),
             schema: None,
             srid: None,
+            mode: None
         };
         assert!(validate_args(&args).is_ok());
     }
@@ -56,7 +57,8 @@ mod tests {
             uri: "postgresql://localhost:5432/postgis".to_string(),
             table: "points".to_string(),
             schema: Some("gis".to_string()),
-            srid: Some(4326)
+            srid: Some(4326),
+            mode: None
         };
         assert!(validate_args(&args).is_ok());
     }
