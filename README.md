@@ -2,7 +2,7 @@
 A blazing fast way to insert large GeoJSON & ShapeFile into a PostGIS database.
 
 ## Why?
-Importing large datasets into a PostGIS database can take a long time and the aim of Popgis is to optimize the performance of such operations. **Popgis is 2x faster than ogr2ogr**, particularly with very large input files against remote databases (see [benchmarks](#benchmarks)). Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
+Importing large datasets into a PostGIS database can take a long time and the aim of Popgis is to optimize the performance of such operations. **Popgis is 2x faster than ogr2ogr**, particularly with very large input files against remote databases. Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
 
 ## Installation
 
