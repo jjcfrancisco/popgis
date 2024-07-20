@@ -34,13 +34,13 @@ impl ToSql for Wkb {
 }
 
 pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
-    let column = stmt.columns().get(0).expect("Failed to get columns");
+    let column = stmt.columns().first().expect("Failed to get columns");
     Ok(column.type_().clone())
 }
 
-pub fn insert_rows<'a>(
+pub fn insert_rows(
     rows: &Rows,
-    config: &Vec<NewTableTypes>,
+    config: &[NewTableTypes],
     geom_type: Type,
     uri: &str,
     schema: &Option<String>,
@@ -61,7 +61,7 @@ pub fn insert_rows<'a>(
     if let Some(schema) = schema {
         query.push_str(&format!("{}.{}", schema, table));
     } else {
-        query.push_str(&table);
+        query.push_str(table);
     }
     query.push_str(" (");
     for column in config.iter() {
@@ -73,7 +73,11 @@ pub fn insert_rows<'a>(
     let mut writer = BinaryCopyInWriter::new(writer, &types);
 
     // Use to test if types are correct
-    // println!("{:?}", types);
+    if std::env::var("DEBUG").is_ok() {
+        println!("DEBUG || {:?}", types);
+    }
+
+    println!("Inserting data into database...");
 
     for row in rows.row.iter() {
         // Transform row into vector of ToSql
@@ -107,11 +111,13 @@ pub fn insert_rows<'a>(
         // Write row to database
         writer
             .write(vec_slice)
-            .expect("Failed to insert row into database");
+            .expect("Failed to insert row into database ✘");
     }
 
     // Finish writing
     writer.finish()?;
+
+    println!("Data sucessfully inserted into database ✓");
 
     Ok(())
 }

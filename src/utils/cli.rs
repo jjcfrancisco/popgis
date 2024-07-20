@@ -3,7 +3,7 @@ use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
 use crate::file_types::shapefile;
 use crate::file_types::geojson;
-use crate::pg::crud::{create_table, create_schema};
+use crate::pg::crud::{create_table, create_schema, check_table_exists, drop_table, get_stmt, can_append};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 
 use clap::Parser;
@@ -32,6 +32,10 @@ pub struct Cli {
     /// Srid, if not provided, will default to 4326
     #[arg(long)]
     pub srid: Option<i32>,
+
+    /// Mode: overwrite, append, fail. Optional.
+    #[arg(short, long)]
+    pub mode: Option<String>,
 }
 
 pub fn run() -> Result<()> {
@@ -52,15 +56,47 @@ pub fn run() -> Result<()> {
             (geojson::read_geojson(&args.input)?, geojson::determine_data_types(&args.input)?)
         }
     };
-    // If schema present, create schema
-    if let Some(schema) = &args.schema {
-        create_schema(&schema, &args.uri)?;
-    }
-    let stmt = if let Some(srid) = args.srid {
-        create_table(&args.table, &args.schema, &config, &args.uri, srid)?
+
+    // If mode not present, check if table exists
+    let create = if args.mode.is_none() {
+        check_table_exists(&args.table, &args.schema, &args.uri)?;
+        true
+    } else if let Some(mode) = &args.mode {
+        match mode.as_str() {
+            "overwrite" => {
+                drop_table(&args.table, &args.schema, &args.uri)?;
+                true
+            }
+            "append" => {
+                can_append(&args.table, &args.schema, &args.uri)?;
+                false
+            }
+            "fail" => {
+                check_table_exists(&args.table, &args.schema, &args.uri)?;
+                true
+            }
+            _ => {
+                println!("Mode not supported ✘");
+                return Err("Mode not supported".into());
+            }
+        }
     } else {
-        create_table(&args.table, &args.schema, &config, &args.uri, 4326)?
+        false
     };
+
+    if create {
+        // If schema present, create schema
+        if let Some(schema) = &args.schema {
+            create_schema(schema, &args.uri)?;
+        }
+        if let Some(srid) = args.srid {
+            create_table(&args.table, &args.schema, &config, &args.uri, srid)?
+        } else {
+            create_table(&args.table, &args.schema, &config, &args.uri, 4326)?
+        };
+    }
+
+    let stmt = get_stmt(&args.table, &args.schema, &args.uri)?; 
     let geom_type = infer_geom_type(stmt)?;
     insert_rows(&rows, &config, geom_type, &args.uri, &args.schema, &args.table)?;
 
