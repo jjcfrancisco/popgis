@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::Result;
 use geojson::GeoJson;
 use postgres::types::Type;
@@ -10,7 +12,7 @@ use crate::pg::binary_copy::Wkb;
 use super::common::NewTableTypes;
 
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
-    let mut table_config: Vec<NewTableTypes> = Vec::new();
+    let mut table_config: HashMap<String, Type> = HashMap::new();
     let geojson_str = std::fs::read_to_string(file_path)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
 
@@ -32,30 +34,40 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         }
                         match value {
                             serde_json::Value::Number(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::FLOAT8,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::FLOAT8
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                    return Err("Column contains mixed data types ✘".into());
+                                } else {
+                                    table_config.insert(key, Type::FLOAT8);
+                                }
                             }
                             serde_json::Value::String(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::TEXT,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::TEXT
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                    return Err("Column contains mixed data types ✘".into());
+                                } else {
+                                    table_config.insert(key, Type::TEXT);
+                                }
                             }
                             serde_json::Value::Bool(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::BOOL,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::BOOL
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                    return Err("Column contains mixed data types ✘".into());
+                                } else {
+                                    table_config.insert(key, Type::BOOL);
+                                }
                             }
                             // If null
-                            serde_json::Value::Null => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::TEXT,
-                                });
-                            }
+                            serde_json::Value::Null => continue,
                             _ => println!("Type currently not supported"),
                         }
                     }
@@ -65,7 +77,15 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
         _ => println!("Not a feature collection"),
     }
 
-    Ok(table_config)
+    let mut data_types: Vec<NewTableTypes> = Vec::new();
+    for (column_name, data_type) in table_config.iter() {
+        data_types.push(NewTableTypes {
+            column_name: column_name.clone(),
+            data_type: data_type.clone(),
+        });
+    }
+
+    Ok(data_types)
 }
 
 pub fn read_geojson(file_path: &str) -> Result<Rows> {

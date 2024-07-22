@@ -77,7 +77,7 @@ pub fn run() -> Result<()> {
             }
             _ => {
                 println!("Mode not supported ✘");
-                return Err("Mode not supported".into());
+                return Err("Mode not supported ✘".into());
             }
         }
     } else {
