@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use crate::{Result, Error};
 
-use crate::Result;
+use std::collections::HashMap;
 use postgres::types::Type;
 use shapefile::dbase::FieldValue;
 
@@ -24,7 +24,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -37,7 +37,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -50,7 +50,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -63,7 +63,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::FLOAT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::INT8);
                     }
@@ -76,7 +76,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::TEXT);
                     }
@@ -89,7 +89,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err("Column contains mixed data types ✘".into());
+                        return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                     } else {
                         table_config.insert(column_name, Type::BOOL);
                     }

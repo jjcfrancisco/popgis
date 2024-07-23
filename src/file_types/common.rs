@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Result, Error};
 
 use postgres::types::Type;
 use std::path::Path;
@@ -67,7 +67,7 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
-        _ => Err("Unsupported file type ✘".into()),
+        _ => Err(Error::UnsupportedFileExtension("Unsupported file type ✘".into())),
     }
 }
 

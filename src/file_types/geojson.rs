@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use crate::{Result, Error};
 
-use crate::Result;
+use std::collections::HashMap;
 use geojson::GeoJson;
 use postgres::types::Type;
 use serde_json;
@@ -41,7 +41,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err("Column contains mixed data types ✘".into());
+                                    return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                                 } else {
                                     table_config.insert(key, Type::FLOAT8);
                                 }
@@ -54,7 +54,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err("Column contains mixed data types ✘".into());
+                                    return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                                 } else {
                                     table_config.insert(key, Type::TEXT);
                                 }
@@ -67,7 +67,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err("Column contains mixed data types ✘".into());
+                                    return Err(Error::ContainsMixedDataTypes("Column contains mixed data types ✘".to_string()));
                                 } else {
                                     table_config.insert(key, Type::BOOL);
                                 }
