@@ -6,15 +6,6 @@ Importing large datasets into a PostGIS database can take a long time and the ai
 
 ## Installation
 
-### Binary
-For binary distributions see the table below
-
-| Platform | x64 | ARM-64 |
-|----------|-----|--------|
-| Linux    |     |        |
-| macOS    |     |        |
-| Windows  |     |        |
-
 ### Cargo
 If you prefer using Cargo, you can install Popgis directly by running the Cargo install command
 ```bash

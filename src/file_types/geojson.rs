@@ -38,7 +38,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] == Type::FLOAT8
                                 {
                                     continue;
-                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
                                     return Err("Column contains mixed data types ✘".into());
                                 } else {
                                     table_config.insert(key, Type::FLOAT8);
@@ -49,7 +51,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] == Type::TEXT
                                 {
                                     continue;
-                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
                                     return Err("Column contains mixed data types ✘".into());
                                 } else {
                                     table_config.insert(key, Type::TEXT);
@@ -60,7 +64,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] == Type::BOOL
                                 {
                                     continue;
-                                } else if table_config.contains_key(&key) && table_config[&key] != Type::INT8 {
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
                                     return Err("Column contains mixed data types ✘".into());
                                 } else {
                                     table_config.insert(key, Type::BOOL);
@@ -68,20 +74,20 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                             }
                             // If null
                             serde_json::Value::Null => continue,
-                            _ => println!("Type currently not supported"),
+                            _ => println!("Type currently not supported ✘"),
                         }
                     }
                 }
             }
         }
-        _ => println!("Not a feature collection"),
+        _ => println!("Not a feature collection ✘"),
     }
 
     let mut data_types: Vec<NewTableTypes> = Vec::new();
-    for (column_name, data_type) in table_config.iter() {
+    for (column_name, data_type) in table_config {
         data_types.push(NewTableTypes {
-            column_name: column_name.clone(),
-            data_type: data_type.clone(),
+            column_name,
+            data_type,
         });
     }
 
@@ -121,21 +127,21 @@ pub fn read_geojson(file_path: &str) -> Result<Rows> {
                         serde_json::Value::Null => {
                             row.add(AcceptedTypes::Text(None));
                         }
-                        _ => println!("Type currently not supported"),
+                        _ => println!("Type currently not supported ✘"),
                     }
                 }
                 let gj_geom = feature.geometry.unwrap();
                 let geom: geo::Geometry<f64> = gj_geom
                     .value
                     .try_into()
-                    .expect("Failed to convert geojson::Geometry to geo::Geometry");
-                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB");
+                    .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
+                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
                 // Check length of row
                 row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
                 rows.add(row);
             }
         }
-        _ => println!("Not a feature collection"),
+        _ => println!("Not a feature collection ✘"),
     }
 
     Ok(rows)

@@ -43,7 +43,7 @@ pub fn to_geo(shape: &Shape) -> Result<geo::Geometry<f64>> {
                 Ok(geo::Geometry::from(poly))
             }
         }
-        _ => Err("Unsupported shape type".into()),
+        _ => Err("Unsupported shape type ✘".into()),
     }
 }
 

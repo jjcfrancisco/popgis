@@ -94,7 +94,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         table_config.insert(column_name, Type::BOOL);
                     }
                 }
-                _ => println!("Type currently not supported"),
+                _ => println!("Type currently not supported ✘"),
             }
         }
     }
@@ -136,12 +136,12 @@ pub fn read_shapefile(file_path: &str) -> Result<Rows> {
                 FieldValue::Logical(value) => {
                     row.add(AcceptedTypes::Bool(value));
                 }
-                _ => println!("Type currently not supported"),
+                _ => println!("Type currently not supported ✘"),
             }
         }
 
         let geom = to_geo(&shape)?;
-        let wkb = geom_to_wkb(&geom).expect("Failed to insert node into database");
+        let wkb = geom_to_wkb(&geom).expect("Failed to insert node into database ✘");
         row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
         rows.add(row);
     }
