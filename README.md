@@ -21,7 +21,7 @@ popgis --help
 ```
 
 ## Usage
-`input`, `uri` & `table` are required; `schema` & `srid` are optional.
+Below are the available commands and flags for Popgis. 
 
 #### Flags
 
@@ -35,7 +35,7 @@ popgis --help
 
 `srid`: choose either 4326 (WGS84) or 3857 (Web Mercator).  **Optional**. *Default is 4326.*
 
-`mode`: choose either **overwrite**, **append** or **fail** modes. Read more [here](#modes).
+`mode` (short: `-m`): choose either **overwrite**, **append** or **fail** modes. Read more [here](#modes).
 
 #### Examples
 ```bash
@@ -51,6 +51,7 @@ popgis -i water_polygons.shp \
        -u  postgresql://my_username:my_password@localhost:5432/my_database \
        -s osm \
        -t waters
+       -m overwrite
 ```
 
 #### Modes
@@ -80,12 +81,12 @@ Although non extensive, the benchmarking shows **Popgis is twice faster than ogr
 ## Future implementation
 The list below contains the upcoming implementations.
 
-To do:
-
+* Project from 4326 to 3857 (and viceversa).
 * Allow nested GeoJSON properties.
-* <del>Improve stdout.</del>
-* <del>Modes: create, overwrite & append.</del>
-* <del>Allow GeoJSON as input.</del>
+* Reduce precision of a GeoJSON file.
+* New validate command to validate files.
+* Merge two columns of different types.
+
 
 ## License
 See [`LICENSE`](./LICENSE)
