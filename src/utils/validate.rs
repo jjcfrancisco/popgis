@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Result, Error};
 use super::cli::Cli;
 use std::path::Path;
 
@@ -7,23 +7,23 @@ pub fn validate_args(args: &Cli) -> Result<()> {
 
     // Check input file exists
     if !Path::new(&args.input).exists() {
-        return Err("Input file does not exist ✘".into());
+        return Err(Error::FailedValidation("Input file does not exist ✘".into()));
     }
 
     // Check URL is not empty
     if args.uri.is_empty() {
-        return Err("URL is empty ✘".into());
+        return Err(Error::FailedValidation("URL is empty ✘".into()));
     }
 
     // Check table is not empty
     if args.table.is_empty() {
-        return Err("Table is empty ✘".into());
+        return Err(Error::FailedValidation("Table is empty ✘".into()));
     }
 
     // Check if srid is 4326 or 3857
     if let Some(srid) = args.srid {
         if srid != 4326 && srid != 3857 {
-            return Err("SRID must be 4326 or 3857 ✘".into());
+            return Err(Error::FailedValidation("SRID must be 4326 or 3857 ✘".into()));
         }
     }
 

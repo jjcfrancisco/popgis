@@ -34,7 +34,7 @@ impl ToSql for Wkb {
 }
 
 pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
-    let column = stmt.columns().first().expect("Failed to get columns");
+    let column = stmt.columns().first().expect("Failed to get columns ✘");
     Ok(column.type_().clone())
 }
 

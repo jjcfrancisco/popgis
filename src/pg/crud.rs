@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Result, Error};
 use postgres::types::Type;
 use postgres::Statement;
 
@@ -99,7 +99,7 @@ pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> 
     if exists {
         return Ok(());
     } else {
-        return Err("Cannot append to a table that does NOT exist ✘".into());
+        return Err(Error::CannotAppend("Cannot append to a table that does NOT exist ✘".into()));
     }
 }
 
@@ -123,7 +123,7 @@ pub fn check_table_exists(
     let exists: bool = client.query_one(&query, &[])?.get(0);
     // If exists, throw error
     if exists {
-        return Err("Table already exists ✘".into());
+        return Err(Error::TableExists("Table already exists ✘".into()));
     } else {
         return Ok(());
     }

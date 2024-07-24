@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Result, Error};
 use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
 use crate::file_types::shapefile;
@@ -77,7 +77,7 @@ pub fn run() -> Result<()> {
             }
             _ => {
                 println!("Mode not supported ✘");
-                return Err("Mode not supported".into());
+                return Err(Error::FailedValidation("Mode not supported ✘".into()));
             }
         }
     } else {

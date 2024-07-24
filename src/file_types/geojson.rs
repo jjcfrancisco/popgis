@@ -1,4 +1,6 @@
-use crate::Result;
+use crate::{Result, Error};
+
+use std::collections::HashMap;
 use geojson::GeoJson;
 use postgres::types::Type;
 use serde_json;
@@ -10,7 +12,7 @@ use crate::pg::binary_copy::Wkb;
 use super::common::NewTableTypes;
 
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
-    let mut table_config: Vec<NewTableTypes> = Vec::new();
+    let mut table_config: HashMap<String, Type> = HashMap::new();
     let geojson_str = std::fs::read_to_string(file_path)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
 
@@ -32,40 +34,64 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         }
                         match value {
                             serde_json::Value::Number(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::FLOAT8,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::FLOAT8
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
+                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                } else {
+                                    table_config.insert(key, Type::FLOAT8);
+                                }
                             }
                             serde_json::Value::String(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::TEXT,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::TEXT
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
+                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                } else {
+                                    table_config.insert(key, Type::TEXT);
+                                }
                             }
                             serde_json::Value::Bool(_) => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::BOOL,
-                                });
+                                if table_config.contains_key(&key)
+                                    && table_config[&key] == Type::BOOL
+                                {
+                                    continue;
+                                } else if table_config.contains_key(&key)
+                                    && table_config[&key] != Type::INT8
+                                {
+                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                } else {
+                                    table_config.insert(key, Type::BOOL);
+                                }
                             }
                             // If null
-                            serde_json::Value::Null => {
-                                table_config.push(NewTableTypes {
-                                    column_name: key,
-                                    data_type: Type::TEXT,
-                                });
-                            }
-                            _ => println!("Type currently not supported"),
+                            serde_json::Value::Null => continue,
+                            _ => println!("Type currently not supported ✘"),
                         }
                     }
                 }
             }
         }
-        _ => println!("Not a feature collection"),
+        _ => println!("Not a feature collection ✘"),
     }
 
-    Ok(table_config)
+    let mut data_types: Vec<NewTableTypes> = Vec::new();
+    for (column_name, data_type) in table_config {
+        data_types.push(NewTableTypes {
+            column_name,
+            data_type,
+        });
+    }
+
+    Ok(data_types)
 }
 
 pub fn read_geojson(file_path: &str) -> Result<Rows> {
@@ -101,21 +127,21 @@ pub fn read_geojson(file_path: &str) -> Result<Rows> {
                         serde_json::Value::Null => {
                             row.add(AcceptedTypes::Text(None));
                         }
-                        _ => println!("Type currently not supported"),
+                        _ => println!("Type currently not supported ✘"),
                     }
                 }
                 let gj_geom = feature.geometry.unwrap();
                 let geom: geo::Geometry<f64> = gj_geom
                     .value
                     .try_into()
-                    .expect("Failed to convert geojson::Geometry to geo::Geometry");
-                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB");
+                    .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
+                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
                 // Check length of row
                 row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
                 rows.add(row);
             }
         }
-        _ => println!("Not a feature collection"),
+        _ => println!("Not a feature collection ✘"),
     }
 
     Ok(rows)
