@@ -5,7 +5,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     // -- utils
-    FailedInputValidation(String),
+    FailedValidation(String),
     Mode(String),
 
     // -- pg
@@ -15,7 +15,7 @@ pub enum Error {
     // -- file_types
     UnsupportedFileExtension(String),
     UnsupportedShapeType(String),
-    ContainsMixedDataTypes(String),
+    MixedDataTypes(String),
 
     // -- Externals
     #[from]

@@ -77,7 +77,7 @@ pub fn run() -> Result<()> {
             }
             _ => {
                 println!("Mode not supported ✘");
-                return Err(Error::FailedInputValidation("Mode not supported ✘".into()));
+                return Err(Error::FailedValidation("Mode not supported ✘".into()));
             }
         }
     } else {
