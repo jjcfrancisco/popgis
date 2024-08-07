@@ -55,6 +55,7 @@ pub enum AcceptedTypes {
 pub enum FileType {
     Shapefile,
     GeoJson,
+    GeoParquet,
 }
 
 pub fn determine_file_type(input_file: &str) -> Result<FileType> {
@@ -67,6 +68,8 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
+        "parquet" => Ok(FileType::GeoParquet),
+        "geoparquet" => Ok(FileType::GeoParquet),
         _ => Err(Error::UnsupportedFileExtension("Unsupported file type ✘".into())),
     }
 }
@@ -79,7 +82,9 @@ mod tests {
     fn test_determine_file_type() {
         let shapefile = "examples/shapefile/andalucia.shp";
         let geojson = "examples/geojson/spain.geojson";
+        let geoparquet = "examples/geoparquet/example.parquet";
         assert_eq!(determine_file_type(shapefile).unwrap(), FileType::Shapefile);
         assert_eq!(determine_file_type(geojson).unwrap(), FileType::GeoJson);
+        assert_eq!(determine_file_type(geoparquet).unwrap(), FileType::GeoParquet);
     }
 }

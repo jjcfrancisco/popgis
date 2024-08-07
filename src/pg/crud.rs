@@ -3,8 +3,29 @@ use postgres::types::Type;
 use postgres::Statement;
 
 use postgres::{Client, NoTls};
+use crate::utils::cli::Cli;
 
 use crate::file_types::common::NewTableTypes;
+
+pub fn prepare_postgis(args: &Cli, config: &[NewTableTypes]) -> Result<()> {
+
+    // Check if schema already exists
+    // if so, printout a message that schema already exists
+    // else, the below message
+    
+    println!("DO FIX");
+
+    // If schema present, create schema
+    if let Some(schema) = &args.schema {
+        create_schema(schema, &args.uri)?;
+        println!("\nSchema '{}' created ✓", schema);
+    }
+    create_table(&args.table, &args.schema, &config, &args.uri, &args.srid)?;
+    println!("Table '{}' created ✓", args.table);
+
+    Ok(())
+
+}
 
 pub fn create_connection(uri: &str) -> Result<Client> {
     let client = Client::connect(uri, NoTls)?;
@@ -32,7 +53,7 @@ pub fn create_table(
     schema_name: &Option<String>,
     config: &[NewTableTypes],
     uri: &str,
-    srid: i32,
+    srid: &Option<usize>,
 ) -> Result<()> {
     let mut query = String::from("CREATE TABLE IF NOT EXISTS ");
     if let Some(schema) = schema_name {
@@ -58,20 +79,17 @@ pub fn create_table(
             _ => println!("Type currently not supported ✘"),
         }
     }
-    query.push_str(&format!("geom Geometry(Geometry, {})", srid));
+    // If no srid, default to 4326
+    if let Some(srid) = srid {
+        query.push_str(&format!("geom Geometry(Geometry, {})", srid));
+    } else {
+        query.push_str("geom Geometry(Geometry, 4326)");
+    }
     query.push_str(");");
 
     // Debugging
     if std::env::var("DEBUG").is_ok() {
         println!("DEBUG || {}", query);
-    }
-
-    // If schema, println with schema
-    if let Some(schema) = schema_name {
-        println!("\nSchema '{}' created ✓", schema);
-        println!("Table '{}' created ✓", table_name);
-    } else {
-        println!("Table '{}' created ✓", table_name);
     }
 
     let mut client = create_connection(uri)?;

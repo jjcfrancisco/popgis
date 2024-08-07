@@ -24,6 +24,8 @@ pub enum Error {
     Pg(postgres::Error),
     #[from]
     Shapefile(shapefile::Error),
+    #[from]
+    GeoArrow(geoarrow::error::GeoArrowError),
 }
 
 // region:    --- Error Boilerplate

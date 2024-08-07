@@ -1,15 +1,82 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 
-use std::collections::HashMap;
+use crate::pg::binary_copy::Wkb;
 use geojson::GeoJson;
 use postgres::types::Type;
 use serde_json;
+use std::collections::HashMap;
 use wkb::geom_to_wkb;
 
-use crate::file_types::common::{AcceptedTypes, Row, Rows};
-use crate::pg::binary_copy::Wkb;
+use crate::pg::binary_copy::{infer_geom_type, insert_row};
+use crate::pg::crud::{get_stmt, prepare_postgis};
+use crate::utils::cli::Cli;
 
-use super::common::NewTableTypes;
+use super::common::{AcceptedTypes, NewTableTypes};
+
+pub fn insert_data(args: Cli) -> Result<()> {
+    // Reads through the geojson file and determines the data types
+    // Fix - it should only read one time
+    //
+    // Example:
+    //
+    // let data_types, geojson_str = read_geojson(&args.uri)?;
+    let data_types = determine_data_types(&args.input)?;
+
+    // Creates the necessary schema and table in PostGIS
+    prepare_postgis(&args, &data_types)?;
+
+    // Infer the geometry type
+    let stmt = get_stmt(&args.table, &args.schema, &args.uri)?;
+    let geom_type = infer_geom_type(stmt)?;
+
+    // Prepare types for binary copy
+    // This is unnecessary -> refactor soon
+    let mut types: Vec<Type> = Vec::new();
+    for column in data_types.iter() {
+        types.push(column.data_type.clone());
+    }
+    types.push(geom_type);
+
+    let geojson = read_geojson(&args.input)?;
+    match geojson {
+        GeoJson::FeatureCollection(fc) => {
+            let features = fc.features;
+            println!("Inserting data into database...");
+            for feature in features {
+                let mut row: Vec<AcceptedTypes> = Vec::new();
+                for (_, value) in feature.properties.unwrap().into_iter() {
+                    match value {
+                        serde_json::Value::Number(num) => {
+                            row.push(AcceptedTypes::Float(num.as_f64()));
+                        }
+                        serde_json::Value::String(string) => {
+                            row.push(AcceptedTypes::Text(Some(string)));
+                        }
+                        serde_json::Value::Bool(boolean) => {
+                            row.push(AcceptedTypes::Bool(Some(boolean)));
+                        }
+                        serde_json::Value::Null => {
+                            row.push(AcceptedTypes::Text(None));
+                        }
+                        _ => println!("Type currently not supported ✘"),
+                    }
+                }
+                let gj_geom = feature.geometry.unwrap();
+                let geom: geo::Geometry<f64> = gj_geom
+                    .value
+                    .try_into()
+                    .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
+                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
+                row.push(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
+                insert_row(row, &data_types, &types, &args)?;
+            }
+            println!("Data sucessfully inserted into database ✓");
+        }
+        _ => println!("Not a feature collection ✘"),
+    }
+
+    Ok(())
+}
 
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     let mut table_config: HashMap<String, Type> = HashMap::new();
@@ -19,11 +86,6 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     match geojson {
         GeoJson::FeatureCollection(fc) => {
             let features = fc.features;
-            // Id not used
-            // table_config.push(NewTableTypes {
-            //     column_name: "id".to_string(),
-            //     data_type: Type::INT8,
-            // });
             if !features.is_empty() {
                 let properties = features.first();
                 if properties.is_some() {
@@ -41,7 +103,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::FLOAT8);
                                 }
@@ -54,7 +118,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::TEXT);
                                 }
@@ -67,7 +133,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::BOOL);
                                 }
@@ -94,57 +162,10 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     Ok(data_types)
 }
 
-pub fn read_geojson(file_path: &str) -> Result<Rows> {
-    let mut rows = Rows::new();
+pub fn read_geojson(file_path: &str) -> Result<GeoJson> {
     let geojson_str = std::fs::read_to_string(file_path)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
-
-    match geojson {
-        GeoJson::FeatureCollection(fc) => {
-            let features = fc.features;
-            for feature in features {
-                let mut row = Row::new();
-                // Id not used
-                // let id = feature.id.unwrap();
-                // match id {
-                //     geojson::feature::Id::Number(id) => {
-                //         let as_i64 = id.as_i64().unwrap();
-                //         row.add(AcceptedTypes::Int(Some(as_i64 as i32)));
-                //     }
-                //     _ => (),
-                // }
-                for (_, value) in feature.properties.unwrap().into_iter() {
-                    match value {
-                        serde_json::Value::Number(num) => {
-                            row.add(AcceptedTypes::Float(num.as_f64()));
-                        }
-                        serde_json::Value::String(string) => {
-                            row.add(AcceptedTypes::Text(Some(string)));
-                        }
-                        serde_json::Value::Bool(boolean) => {
-                            row.add(AcceptedTypes::Bool(Some(boolean)));
-                        }
-                        serde_json::Value::Null => {
-                            row.add(AcceptedTypes::Text(None));
-                        }
-                        _ => println!("Type currently not supported ✘"),
-                    }
-                }
-                let gj_geom = feature.geometry.unwrap();
-                let geom: geo::Geometry<f64> = gj_geom
-                    .value
-                    .try_into()
-                    .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
-                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
-                // Check length of row
-                row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
-                rows.add(row);
-            }
-        }
-        _ => println!("Not a feature collection ✘"),
-    }
-
-    Ok(rows)
+    Ok(geojson)
 }
 
 #[cfg(test)]

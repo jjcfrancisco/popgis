@@ -86,6 +86,7 @@ The list below contains the upcoming implementations.
 * Reduce precision of a GeoJSON file.
 * New validate command to validate files.
 * Merge two columns of different types.
+* Reading of Shapefile & GeoJSON in one pass.
 
 
 ## License
