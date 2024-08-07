@@ -6,8 +6,10 @@ use std::path::Path;
 use crate::pg::binary_copy::Wkb;
 
 // Struct to hold column name and data type
-pub struct NewTableTypes {
-    pub column_name: String,
+// Display
+#[derive(Debug)]
+pub struct NameAndType {
+    pub name: String,
     pub data_type: Type,
 }
 

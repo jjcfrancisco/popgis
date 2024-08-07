@@ -2,7 +2,7 @@ use crate::{Result, Error};
 use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
 use crate::file_types::geojson;
-use crate::pg::crud::{check_table_exists, drop_table, can_append};
+use crate::pg::ops::{check_table_exists, drop_table};
 
 use clap::Parser;
 
@@ -48,36 +48,25 @@ pub fn run() -> Result<()> {
     let file_type = determine_file_type(&args.input)?;
 
     // If mode not present, check if table exists
-    let create = if args.mode.is_none() {
+    if args.mode.is_none() {
         check_table_exists(&args.table, &args.schema, &args.uri)?;
-        true
     } else if let Some(mode) = &args.mode {
         match mode.as_str() {
             "overwrite" => {
                 drop_table(&args.table, &args.schema, &args.uri)?;
-                true
-            }
-            "append" => {
-                can_append(&args.table, &args.schema, &args.uri)?;
-                false
             }
             "fail" => {
                 check_table_exists(&args.table, &args.schema, &args.uri)?;
-                true
             }
             _ => {
                 println!("Mode not supported ✘");
                 return Err(Error::FailedValidation("Mode not supported ✘".into()));
             }
         }
-    } else {
-        false
     };
     
     match file_type {
         FileType::GeoJson => {
-            // create var must be passed
-            // geojson::insert_data(args, &config, srid)?;
             geojson::insert_data(args)?;
         }
         FileType::Shapefile => {
@@ -87,23 +76,6 @@ pub fn run() -> Result<()> {
             // create var must be passed
         }
     };
-
-
-    // if create {
-    //     // If schema present, create schema
-    //     if let Some(schema) = &args.schema {
-    //         create_schema(schema, &args.uri)?;
-    //     }
-    //     if let Some(srid) = args.srid {
-    //         create_table(&args.table, &args.schema, &config, &args.uri, srid)?
-    //     } else {
-    //         create_table(&args.table, &args.schema, &config, &args.uri, 4326)?
-    //     };
-    // }
-    //
-    // let stmt = get_stmt(&args.table, &args.schema, &args.uri)?; 
-    // let geom_type = infer_geom_type(stmt)?;
-    // insert_rows(&rows, &config, geom_type, &args.uri, &args.schema, &args.table)?;
 
     Ok(())
 }

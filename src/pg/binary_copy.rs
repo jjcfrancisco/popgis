@@ -8,8 +8,8 @@ use std::error::Error;
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::pg::crud::create_connection;
-use crate::file_types::common::{AcceptedTypes, NewTableTypes};
+use crate::pg::ops::create_connection;
+use crate::file_types::common::{AcceptedTypes, NameAndType};
 use crate::utils::cli::Cli;
 
 #[derive(Debug)]
@@ -34,14 +34,20 @@ impl ToSql for Wkb {
     to_sql_checked!();
 }
 
-pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
+pub fn infer_geometry_type(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<Type> {
+    let mut client = create_connection(uri)?;
+    let stmt = if let Some(schema) = schema_name {
+        client.prepare(&format!("SELECT geom FROM {}.{}", schema, table_name))?
+    } else {
+        client.prepare(&format!("SELECT geom FROM {}", table_name))?
+    };
     let column = stmt.columns().first().expect("Failed to get columns ✘");
     Ok(column.type_().clone())
 }
 
 pub fn insert_row(
     row: Vec<AcceptedTypes>,
-    config: &[NewTableTypes],
+    config: &[NameAndType],
     types: &Vec<Type>,
     args: &Cli,
 ) -> Result<()> {
@@ -59,7 +65,7 @@ pub fn insert_row(
     }
     query.push_str(" (");
     for column in config.iter() {
-        query.push_str(&format!("{},", column.column_name));
+        query.push_str(&format!("{},", column.name));
     }
     query.push_str("geom) FROM stdin BINARY");
     let writer: CopyInWriter = client.copy_in(&query)?;

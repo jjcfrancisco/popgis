@@ -10,7 +10,6 @@ pub enum Error {
 
     // -- pg
     TableExists(String),
-    CannotAppend(String),
 
     // -- file_types
     UnsupportedFileExtension(String),

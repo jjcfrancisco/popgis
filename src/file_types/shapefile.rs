@@ -4,12 +4,12 @@ use std::collections::HashMap;
 use postgres::types::Type;
 use shapefile::dbase::FieldValue;
 
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Row, Rows};
+use crate::file_types::common::{AcceptedTypes, NameAndType, Row, Rows};
 use crate::file_types::geo::to_geo;
 use crate::pg::binary_copy::Wkb;
 use wkb::geom_to_wkb;
 
-pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
+pub fn determine_data_types(file_path: &str) -> Result<Vec<NameAndType>> {
     let mut table_config: HashMap<String, Type> = HashMap::new();
     let mut reader = shapefile::Reader::from_path(file_path)?;
     for shape_record in reader.iter_shapes_and_records() {
@@ -99,10 +99,10 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
         }
     }
 
-    let mut data_types: Vec<NewTableTypes> = Vec::new();
+    let mut data_types: Vec<NameAndType> = Vec::new();
     for (column_name, data_type) in table_config.iter() {
-        data_types.push(NewTableTypes {
-            column_name: column_name.clone(),
+        data_types.push(NameAndType {
+            name: column_name.clone(),
             data_type: data_type.clone(),
         });
     }

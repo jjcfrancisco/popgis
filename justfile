@@ -10,6 +10,7 @@
     cd ./target/release/ && ./popgis --input ../../examples/geojson/spain.geojson \
                  --uri  postgresql://pio:password@localhost:25432/popgis \
                  --schema geojson \
-                 --table spain
+                 --table spain \
+                 --mode=overwrite
 
 @set-tags:

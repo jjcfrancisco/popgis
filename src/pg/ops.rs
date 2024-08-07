@@ -1,14 +1,10 @@
-use crate::{Error, Result};
+use crate::{file_types::common::NameAndType, Error, Result};
 use postgres::types::Type;
-use postgres::Statement;
 
 use crate::utils::cli::Cli;
 use postgres::{Client, NoTls};
 
-use crate::file_types::common::NewTableTypes;
-
-pub fn prepare_postgis(args: &Cli, config: &[NewTableTypes]) -> Result<()> {
-
+pub fn prepare_postgis(args: &Cli, config: &[NameAndType]) -> Result<()> {
     // If schema present, create schema
     if let Some(schema) = &args.schema {
         let schema_exists = create_schema(schema, &args.uri)?;
@@ -42,20 +38,10 @@ pub fn create_schema(schema_name: &str, uri: &str) -> Result<bool> {
     }
 }
 
-pub fn get_stmt(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<Statement> {
-    let mut client = create_connection(uri)?;
-    let stmt = if let Some(schema) = schema_name {
-        client.prepare(&format!("SELECT geom FROM {}.{}", schema, table_name))?
-    } else {
-        client.prepare(&format!("SELECT geom FROM {}", table_name))?
-    };
-    Ok(stmt)
-}
-
 pub fn create_table(
     table_name: &str,
     schema_name: &Option<String>,
-    config: &[NewTableTypes],
+    config: &[NameAndType],
     uri: &str,
     srid: &Option<usize>,
 ) -> Result<()> {
@@ -69,20 +55,21 @@ pub fn create_table(
     for column in config.iter() {
         match column.data_type {
             Type::INT8 => {
-                query.push_str(&format!("{} INT,", column.column_name));
+                query.push_str(&format!("{} INT,", column.name));
             }
             Type::FLOAT8 => {
-                query.push_str(&format!("{} DOUBLE PRECISION,", column.column_name));
+                query.push_str(&format!("{} DOUBLE PRECISION,", column.name));
             }
             Type::TEXT => {
-                query.push_str(&format!("{} TEXT,", column.column_name));
+                query.push_str(&format!("{} TEXT,", column.name));
             }
             Type::BOOL => {
-                query.push_str(&format!("{} BOOL,", column.column_name));
+                query.push_str(&format!("{} BOOL,", column.name));
             }
             _ => println!("Type currently not supported ✘"),
         }
     }
+
     // If no srid, default to 4326
     if let Some(srid) = srid {
         query.push_str(&format!("geom Geometry(Geometry, {})", srid));
@@ -100,30 +87,6 @@ pub fn create_table(
     client.execute(&query, &[])?;
 
     Ok(())
-}
-
-pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
-    let mut client = create_connection(uri)?;
-    let query = if let Some(schema) = schema_name {
-        format!(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = '{}' AND table_name = '{}')",
-            schema, table_name
-        )
-    } else {
-        format!(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{}')",
-            table_name
-        )
-    };
-    let exists: bool = client.query_one(&query, &[])?.get(0);
-    // If exists, return Ok
-    if exists {
-        return Ok(());
-    } else {
-        return Err(Error::CannotAppend(
-            "Cannot append to a table that does NOT exist ✘".into(),
-        ));
-    }
 }
 
 pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {

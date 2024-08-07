@@ -7,36 +7,29 @@ use serde_json;
 use std::collections::HashMap;
 use wkb::geom_to_wkb;
 
-use crate::pg::binary_copy::{infer_geom_type, insert_row};
-use crate::pg::crud::{get_stmt, prepare_postgis};
+use crate::pg::binary_copy::{infer_geometry_type, insert_row};
+use crate::pg::ops::prepare_postgis;
 use crate::utils::cli::Cli;
 
-use super::common::{AcceptedTypes, NewTableTypes};
+use super::common::{AcceptedTypes, NameAndType};
 
 pub fn insert_data(args: Cli) -> Result<()> {
-    // Reads through the geojson file and determines the data types
-    // Fix - it should only read one time
-    //
-    // Example:
-    //
-    // let data_types, geojson_str = read_geojson(&args.uri)?;
-    let data_types = determine_data_types(&args.input)?;
+    // Determine data types of the input file
+    let file_data_types = determine_file_data_types(&args.input)?;
+    // Prepare database
+    prepare_postgis(&args, &file_data_types)?;
 
-    // Creates the necessary schema and table in PostGIS
-    prepare_postgis(&args, &data_types)?;
-
-    // Infer the geometry type
-    let stmt = get_stmt(&args.table, &args.schema, &args.uri)?;
-    let geom_type = infer_geom_type(stmt)?;
-
-    // Prepare types for binary copy
-    // This is unnecessary -> refactor soon
+    // Get data types
     let mut types: Vec<Type> = Vec::new();
-    for column in data_types.iter() {
+    for column in file_data_types.iter() {
         types.push(column.data_type.clone());
     }
+    // Get geometry type
+    let geom_type = infer_geometry_type(&args.table, &args.schema, &args.uri)?;
+    // Add geometry type to types
     types.push(geom_type);
 
+    // Read geojson file
     let geojson = read_geojson(&args.input)?;
     match geojson {
         GeoJson::FeatureCollection(fc) => {
@@ -68,7 +61,7 @@ pub fn insert_data(args: Cli) -> Result<()> {
                     .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
                 let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
                 row.push(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
-                insert_row(row, &data_types, &types, &args)?;
+                insert_row(row, &file_data_types, &types, &args)?;
             }
             println!("Data sucessfully inserted into database ✓");
         }
@@ -78,7 +71,7 @@ pub fn insert_data(args: Cli) -> Result<()> {
     Ok(())
 }
 
-pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
+pub fn determine_file_data_types(file_path: &str) -> Result<Vec<NameAndType>> {
     let mut table_config: HashMap<String, Type> = HashMap::new();
     let geojson_str = std::fs::read_to_string(file_path)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
@@ -151,15 +144,15 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
         _ => println!("Not a feature collection ✘"),
     }
 
-    let mut data_types: Vec<NewTableTypes> = Vec::new();
-    for (column_name, data_type) in table_config {
-        data_types.push(NewTableTypes {
-            column_name,
-            data_type,
+    let mut names_and_types: Vec<NameAndType> = Vec::new();
+    for (name, data_type) in table_config.iter() {
+        names_and_types.push(NameAndType {
+            name: name.to_string(),
+            data_type: data_type.clone(),
         });
     }
 
-    Ok(data_types)
+    Ok(names_and_types)
 }
 
 pub fn read_geojson(file_path: &str) -> Result<GeoJson> {
@@ -173,12 +166,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_determine_data_types() {
+    fn test_determine_file_data_types() {
         let file_path = "examples/geojson/spain.geojson";
-        let data_types = determine_data_types(file_path).unwrap();
+        let data_types = determine_file_data_types(file_path).unwrap();
         assert_eq!(data_types.len(), 3);
         for data_type in data_types {
-            match data_type.column_name.as_str() {
+            match data_type.name.as_str() {
                 "source" => assert_eq!(data_type.data_type, Type::TEXT),
                 "id" => assert_eq!(data_type.data_type, Type::TEXT),
                 "name" => assert_eq!(data_type.data_type, Type::TEXT),
@@ -191,6 +184,12 @@ mod tests {
     fn test_read_geojson() {
         let file_path = "examples/geojson/spain.geojson";
         let rows = read_geojson(file_path).unwrap();
-        assert_eq!(rows.row.len(), 19);
+        match rows {
+            GeoJson::FeatureCollection(fc) => {
+                let features = fc.features;
+                assert_eq!(features.len(), 19);
+            }
+            _ => (),
+        }
     }
 }
