@@ -1,30 +1,27 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 use postgres::types::Type;
 use postgres::Statement;
 
-use postgres::{Client, NoTls};
 use crate::utils::cli::Cli;
+use postgres::{Client, NoTls};
 
 use crate::file_types::common::NewTableTypes;
 
 pub fn prepare_postgis(args: &Cli, config: &[NewTableTypes]) -> Result<()> {
 
-    // Check if schema already exists
-    // if so, printout a message that schema already exists
-    // else, the below message
-    
-    println!("DO FIX");
-
     // If schema present, create schema
     if let Some(schema) = &args.schema {
-        create_schema(schema, &args.uri)?;
-        println!("\nSchema '{}' created ✓", schema);
+        let schema_exists = create_schema(schema, &args.uri)?;
+        if !schema_exists {
+            println!("Schema '{}' already exists ✓", schema);
+        } else {
+            println!("\nSchema '{}' created ✓", schema);
+        }
     }
     create_table(&args.table, &args.schema, &config, &args.uri, &args.srid)?;
     println!("Table '{}' created ✓", args.table);
 
     Ok(())
-
 }
 
 pub fn create_connection(uri: &str) -> Result<Client> {
@@ -32,10 +29,17 @@ pub fn create_connection(uri: &str) -> Result<Client> {
     Ok(client)
 }
 
-pub fn create_schema(schema_name: &str, uri: &str) -> Result<()> {
+pub fn create_schema(schema_name: &str, uri: &str) -> Result<bool> {
     let mut client = create_connection(uri)?;
-    client.batch_execute(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema_name))?;
-    Ok(())
+    let query = "SELECT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name = $1)";
+    let row = client.query_one(query, &[&schema_name])?;
+    let exists: bool = row.get(0);
+    if exists {
+        return Ok(false);
+    } else {
+        client.batch_execute(&format!("CREATE SCHEMA {}", schema_name))?;
+        return Ok(true);
+    }
 }
 
 pub fn get_stmt(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<Statement> {
@@ -96,7 +100,6 @@ pub fn create_table(
     client.execute(&query, &[])?;
 
     Ok(())
-
 }
 
 pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
@@ -117,15 +120,13 @@ pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> 
     if exists {
         return Ok(());
     } else {
-        return Err(Error::CannotAppend("Cannot append to a table that does NOT exist ✘".into()));
+        return Err(Error::CannotAppend(
+            "Cannot append to a table that does NOT exist ✘".into(),
+        ));
     }
 }
 
-pub fn check_table_exists(
-    table_name: &str,
-    schema_name: &Option<String>,
-    uri: &str,
-) -> Result<()> {
+pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
     let mut client = create_connection(uri)?;
     let query = if let Some(schema) = schema_name {
         format!(
