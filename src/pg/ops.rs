@@ -9,7 +9,7 @@ pub fn prepare_postgis(args: &Cli, config: &[NameAndType]) -> Result<()> {
     if let Some(schema) = &args.schema {
         let schema_exists = create_schema(schema, &args.uri)?;
         if !schema_exists {
-            println!("Schema '{}' already exists ✓", schema);
+            println!("Schema '{}' already exists ■", schema);
         } else {
             println!("\nSchema '{}' created ✓", schema);
         }
@@ -31,10 +31,10 @@ pub fn create_schema(schema_name: &str, uri: &str) -> Result<bool> {
     let row = client.query_one(query, &[&schema_name])?;
     let exists: bool = row.get(0);
     if exists {
-        return Ok(false);
+        Ok(false)
     } else {
         client.batch_execute(&format!("CREATE SCHEMA {}", schema_name))?;
-        return Ok(true);
+        Ok(true)
     }
 }
 
@@ -105,9 +105,9 @@ pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &
     let exists: bool = client.query_one(&query, &[])?.get(0);
     // If exists, throw error
     if exists {
-        return Err(Error::TableExists("Table already exists ✘".into()));
+        Err(Error::TableExists("Table already exists ✘".into()))
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 

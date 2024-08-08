@@ -2,14 +2,13 @@ use crate::Result;
 use bytes::BytesMut;
 use postgres::types::to_sql_checked;
 use postgres::types::{IsNull, ToSql, Type};
-use postgres::Statement;
 use std::error::Error;
 
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::pg::ops::create_connection;
 use crate::file_types::common::{AcceptedTypes, NameAndType};
+use crate::pg::ops::create_connection;
 use crate::utils::cli::Cli;
 
 #[derive(Debug)]
@@ -34,7 +33,11 @@ impl ToSql for Wkb {
     to_sql_checked!();
 }
 
-pub fn infer_geometry_type(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<Type> {
+pub fn infer_geometry_type(
+    table_name: &str,
+    schema_name: &Option<String>,
+    uri: &str,
+) -> Result<Type> {
     let mut client = create_connection(uri)?;
     let stmt = if let Some(schema) = schema_name {
         client.prepare(&format!("SELECT geom FROM {}.{}", schema, table_name))?
