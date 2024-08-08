@@ -73,7 +73,7 @@ pub fn insert_row(
     query.push_str("geom) FROM stdin BINARY");
     let writer: CopyInWriter = client.copy_in(&query)?;
 
-    let mut writer = BinaryCopyInWriter::new(writer, &types);
+    let mut writer = BinaryCopyInWriter::new(writer, types);
 
     // Use to test if types are correct
     if std::env::var("DEBUG").is_ok() {

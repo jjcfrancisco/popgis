@@ -13,34 +13,6 @@ pub struct NameAndType {
     pub data_type: Type,
 }
 
-#[derive(Debug)]
-pub struct Row {
-    pub columns: Vec<AcceptedTypes>,
-}
-
-#[derive(Debug)]
-pub struct Rows {
-    pub row: Vec<Row>,
-}
-
-impl Row {
-    pub fn new() -> Self {
-        Row { columns: Vec::new() }
-    }
-    pub fn add(&mut self, column: AcceptedTypes) {
-        self.columns.push(column);
-    }
-}
-
-impl Rows {
-    pub fn new() -> Self {
-        Rows { row: Vec::new() }
-    }
-    pub fn add(&mut self, row: Row) {
-        self.row.push(row);
-    }
-}
-
 // Enum to hold accepted data types
 #[derive(Debug)]
 pub enum AcceptedTypes {

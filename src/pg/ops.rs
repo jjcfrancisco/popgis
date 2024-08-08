@@ -14,7 +14,7 @@ pub fn prepare_postgis(args: &Cli, config: &[NameAndType]) -> Result<()> {
             println!("\nSchema '{}' created ✓", schema);
         }
     }
-    create_table(&args.table, &args.schema, &config, &args.uri, &args.srid)?;
+    create_table(&args.table, &args.schema, config, &args.uri, &args.srid)?;
     println!("Table '{}' created ✓", args.table);
 
     Ok(())

@@ -3,7 +3,8 @@
     cd ./target/release/ && ./popgis --input ../../examples/shapefile/andalucia.shp \
                  --uri  postgresql://pio:password@localhost:25432/popgis \
                  --schema shapefile \
-                 --table andalucia
+                 --table andalucia \
+                 --mode=overwrite
 
 @try-geojson:
     cargo build --release

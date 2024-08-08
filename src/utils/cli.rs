@@ -1,7 +1,7 @@
 use crate::{Result, Error};
 use crate::file_types::common::{FileType, determine_file_type};
 use crate::utils::validate::validate_args;
-use crate::file_types::geojson;
+use crate::file_types::{geojson, shapefile};
 use crate::pg::ops::{check_table_exists, drop_table};
 
 use clap::Parser;
@@ -70,7 +70,7 @@ pub fn run() -> Result<()> {
             geojson::insert_data(args)?;
         }
         FileType::Shapefile => {
-            // create var must be passed
+            shapefile::insert_data(args)?;
         }
         FileType::GeoParquet => {
             // create var must be passed
