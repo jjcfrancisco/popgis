@@ -3,14 +3,13 @@ use crate::{Error, Result};
 use postgres::types::Type;
 use shapefile::dbase::FieldValue;
 use std::collections::HashMap;
+use wkb::geom_to_wkb;
 
 use crate::file_types::common::{AcceptedTypes, NameAndType};
 use crate::file_types::geo::to_geo;
 use crate::pg::binary_copy::{infer_geometry_type, insert_row, Wkb};
 use crate::pg::ops::prepare_postgis;
 use crate::utils::cli::Cli;
-
-use wkb::geom_to_wkb;
 
 pub fn insert_data(args: Cli) -> Result<()> {
     // Determine data types of the input file

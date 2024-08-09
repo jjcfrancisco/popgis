@@ -14,4 +14,12 @@
                  --table spain \
                  --mode=overwrite
 
+@try-geoparquet:
+    cargo build --release
+    cd ./target/release/ && ./popgis --input ../../examples/geoparquet/example.parquet \
+                 --uri  postgresql://pio:password@localhost:25432/popgis \
+                 --schema geoparquet \
+                 --table example \
+                 --mode=overwrite
+    
 @set-tags:

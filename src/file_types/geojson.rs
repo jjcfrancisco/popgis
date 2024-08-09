@@ -10,8 +10,7 @@ use wkb::geom_to_wkb;
 use crate::pg::binary_copy::{infer_geometry_type, insert_row};
 use crate::pg::ops::prepare_postgis;
 use crate::utils::cli::Cli;
-
-use super::common::{AcceptedTypes, NameAndType};
+use crate::file_types::common::{AcceptedTypes, NameAndType};
 
 pub fn insert_data(args: Cli) -> Result<()> {
     // Determine data types of the input file
