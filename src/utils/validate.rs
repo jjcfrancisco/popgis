@@ -62,4 +62,46 @@ mod tests {
         };
         assert!(validate_args(&args).is_ok());
     }
+
+    // Invalid srid
+    #[test]
+    fn test_validate_args_invalid_srid() {
+        let args = Cli {
+            input: "examples/shapefile/andalucia.shp".to_string(),
+            uri: "postgresql://localhost:5432/postgis".to_string(),
+            table: "points".to_string(),
+            schema: Some("gis".to_string()),
+            srid: Some(1234),
+            mode: None
+        };
+        assert!(validate_args(&args).is_err());
+    }
+
+    // File does not exist
+    #[test]
+    fn test_validate_args_file_does_not_exist() {
+        let args = Cli {
+            input: "examples/shapefile/does_not_exist.shp".to_string(),
+            uri: "postgresql://localhost:5432/postgis".to_string(),
+            table: "points".to_string(),
+            schema: Some("gis".to_string()),
+            srid: Some(4326),
+            mode: None
+        };
+        assert!(validate_args(&args).is_err());
+    }
+
+    // Url is empty
+    #[test]
+    fn test_validate_args_empty_url() {
+        let args = Cli {
+            input: "examples/shapefile/andalucia.shp".to_string(),
+            uri: "".to_string(),
+            table: "points".to_string(),
+            schema: Some("gis".to_string()),
+            srid: Some(4326),
+            mode: None
+        };
+        assert!(validate_args(&args).is_err());
+    }
 }

@@ -6,37 +6,11 @@ use std::path::Path;
 use crate::pg::binary_copy::Wkb;
 
 // Struct to hold column name and data type
-pub struct NewTableTypes {
-    pub column_name: String,
+// Display
+#[derive(Debug)]
+pub struct NameAndType {
+    pub name: String,
     pub data_type: Type,
-}
-
-#[derive(Debug)]
-pub struct Row {
-    pub columns: Vec<AcceptedTypes>,
-}
-
-#[derive(Debug)]
-pub struct Rows {
-    pub row: Vec<Row>,
-}
-
-impl Row {
-    pub fn new() -> Self {
-        Row { columns: Vec::new() }
-    }
-    pub fn add(&mut self, column: AcceptedTypes) {
-        self.columns.push(column);
-    }
-}
-
-impl Rows {
-    pub fn new() -> Self {
-        Rows { row: Vec::new() }
-    }
-    pub fn add(&mut self, row: Row) {
-        self.row.push(row);
-    }
 }
 
 // Enum to hold accepted data types
@@ -55,6 +29,7 @@ pub enum AcceptedTypes {
 pub enum FileType {
     Shapefile,
     GeoJson,
+    GeoParquet,
 }
 
 pub fn determine_file_type(input_file: &str) -> Result<FileType> {
@@ -67,6 +42,8 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
+        "parquet" => Ok(FileType::GeoParquet),
+        "geoparquet" => Ok(FileType::GeoParquet),
         _ => Err(Error::UnsupportedFileExtension("Unsupported file type ✘".into())),
     }
 }
@@ -79,7 +56,9 @@ mod tests {
     fn test_determine_file_type() {
         let shapefile = "examples/shapefile/andalucia.shp";
         let geojson = "examples/geojson/spain.geojson";
+        let geoparquet = "examples/geoparquet/example.parquet";
         assert_eq!(determine_file_type(shapefile).unwrap(), FileType::Shapefile);
         assert_eq!(determine_file_type(geojson).unwrap(), FileType::GeoJson);
+        assert_eq!(determine_file_type(geoparquet).unwrap(), FileType::GeoParquet);
     }
 }
