@@ -2,9 +2,12 @@ use std::any::Any;
 
 use crate::{Error, Result};
 
+use arrow_schema::DataType;
+use geoarrow::array::AsGeometryArray;
 use geoarrow::io::parquet::read_geoparquet_async;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
 use geoarrow::table::GeoTable;
+use geoarrow::trait_::GeometryArrayAccessor;
 use tokio::fs::File;
 use postgres::types::Type;
 use std::collections::HashMap;
@@ -17,7 +20,7 @@ use crate::pg::binary_copy::infer_geometry_type;
 
 pub fn insert_data(args: Cli) -> Result<()> {
     // Currently static batch size. In time, this should be dynamic
-    let batch_size = 1000;
+    let batch_size = 500;
     // Read geoparquet file using tokio runtime
     let runtime = tokio::runtime::Runtime::new()?;
     let geotable = runtime.block_on(read_geoparquet(&args.input, batch_size))?;
@@ -80,10 +83,93 @@ async fn read_geoparquet(file: &str, batch_size: usize) -> Result<GeoTable> {
 }
 
 pub fn process_geotable(geotable: GeoTable) -> Result<()> {
-    let geom_column = geotable.geometry()?;
-    let geom_type = geom_column.data_type();
-    println!("{:?}", geom_type);
-    let chunks = geom_column.geometry_chunks();
+    let geometry_column = geotable.geometry()?;
+    let schema = geotable.schema();
+    let fields = schema.fields();
+    let geometry_type = geotable.geometry_data_type()?;
+
+    for field in fields {
+        // let name = field.name();
+        let data_type = field.data_type();
+        match data_type {
+            DataType::Utf8 => {}
+            DataType::Float16 => {}
+            DataType::Float32 => {}
+            DataType::Float64 => {}
+            DataType::Int8 => {}
+            DataType::Int16 => {}
+            DataType::Int32 => {}
+            DataType::Int64 => {}
+            DataType::UInt8 => {}
+            DataType::UInt16 => {}
+            DataType::UInt32 => {}
+            DataType::Null => {}
+            DataType::Binary => {}
+            DataType::Boolean => {}
+            DataType::Date32 => {}
+            DataType::List(_) => {}
+            _ => println!("Data type '{:?}' not supported ✘", data_type),
+        }
+    }
+
+    geotable.batches().into_iter().for_each(|batch| {
+        let address = batch.column_by_name("address");
+        if address.is_some() {
+            let address = address.unwrap().to_data();
+            std::process::exit(0);
+        }
+    });
+
+    for geom in geometry_column.geometry_chunks().into_iter() {
+        match geometry_type {
+            geoarrow::datatypes::GeoDataType::Point(_) => {
+                let geoarrow_point = geom.as_point();
+                for point in geoarrow_point.iter_geo() {
+                }
+            }
+            geoarrow::datatypes::GeoDataType::MultiPoint(_) => {
+                let geoarrow_multipoint = geom.as_multi_point();
+                for multipoint in geoarrow_multipoint.iter_geo() {
+                }
+            }
+            geoarrow::datatypes::GeoDataType::LineString(_) => {
+                let geoarrow_line = geom.as_line_string();
+                for line in geoarrow_line.iter_geo() {
+                }
+            }
+            geoarrow::datatypes::GeoDataType::MultiLineString(_) => {
+                let geoarrow_multiline = geom.as_multi_line_string();
+                for multiline in geoarrow_multiline.iter_geo() {
+                }
+            }
+            geoarrow::datatypes::GeoDataType::Polygon(_) => {
+                let geoarrow_poly = geom.as_polygon();
+                for poly in geoarrow_poly.iter_geo() {
+                }
+            }
+            geoarrow::datatypes::GeoDataType::MultiPolygon(_) => {
+                let geoarrow_multipoly = geom.as_multi_polygon();
+                for multipoly in geoarrow_multipoly.iter_geo() {
+                }
+            }
+            _ => println!("Geometry type not supported ✘"),
+        }
+        let polygon = geom.as_polygon();
+        for poly in polygon.iter_geo() {
+        }
+    
+    }
+
+    // for chunk in chunks {
+        // Iterate over rows
+
+        // match geometry_type {
+        //     geoarrow::datatypes::GeoDataType::Polygon(_) => {
+        //         let polys = chunk.as_polygon();
+        //     }
+        //     _ => println!("Geometry type not supported ✘"),
+        // }
+    // }
 
     // To polygons
     // for chunk in chunks {

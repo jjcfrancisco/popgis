@@ -26,4 +26,5 @@ parquet = { version = "52.2.0", features = ["async", "snap"] }
 geoarrow = { version = "0.2.0", features = ["parquet_async", "parquet_compression"] }
 futures = "0.3.30"
 geo-types = "0.7.13"
+arrow-schema = "51.0.0"
 

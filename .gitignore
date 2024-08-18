@@ -14,3 +14,5 @@ target/
 *.pdb
 
 DS_Store
+
+examples/geoparquet/saporo.parquet

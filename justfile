@@ -16,7 +16,7 @@
 
 @try-geoparquet:
     cargo build --release
-    cd ./target/release/ && ./popgis --input ../../examples/geoparquet/example.parquet \
+    cd ./target/release/ && ./popgis --input ../../examples/geoparquet/saporo.parquet \
                  --uri  postgresql://pio:password@localhost:25432/popgis \
                  --schema geoparquet \
                  --table example \

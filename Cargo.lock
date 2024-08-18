@@ -1753,6 +1753,7 @@ name = "popgis"
 version = "0.3.4"
 dependencies = [
  "arrow 52.2.0",
+ "arrow-schema 51.0.0",
  "bytes",
  "clap",
  "derive_more",
