@@ -48,16 +48,7 @@ pub fn infer_geometry_type(
     Ok(column.type_().clone())
 }
 
-pub fn insert_row(
-    row: Vec<AcceptedTypes>,
-    config: &[NameAndType],
-    types: &Vec<Type>,
-    args: &Cli,
-) -> Result<()> {
-    // Create connection
-    let mut client = create_connection(&args.uri)?;
-
-    // Binary copy in writer
+pub fn prepare_query(args: &Cli, names_and_types: &[NameAndType]) -> String {
     let schema = &args.schema;
     let table = &args.table;
     let mut query = String::from("COPY ");
@@ -67,12 +58,27 @@ pub fn insert_row(
         query.push_str(table);
     }
     query.push_str(" (");
-    for column in config.iter() {
+    for column in names_and_types.iter() {
         query.push_str(&format!("{},", column.name));
     }
     query.push_str("geom) FROM stdin BINARY");
+    query
+}
+
+pub fn insert_row(
+    row: Vec<AcceptedTypes>,
+    // names_and_types: &[NameAndType],
+    query: String,
+    types: &Vec<Type>,
+    args: &Cli,
+) -> Result<()> {
+    // Create connection
+    let mut client = create_connection(&args.uri)?;
+
+    // Create copy in writer
     let writer: CopyInWriter = client.copy_in(&query)?;
 
+    // Create binary copy in writer
     let mut writer = BinaryCopyInWriter::new(writer, types);
 
     // Use to test if types are correct

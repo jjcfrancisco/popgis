@@ -7,26 +7,24 @@ use serde_json;
 use std::collections::HashMap;
 use wkb::geom_to_wkb;
 
-use crate::pg::binary_copy::{infer_geometry_type, insert_row};
+use crate::file_types::common::{AcceptedTypes, NameAndType};
+use crate::pg::binary_copy::{infer_geometry_type, insert_row, prepare_query};
 use crate::pg::ops::prepare_postgis;
 use crate::utils::cli::Cli;
-use crate::file_types::common::{AcceptedTypes, NameAndType};
 
 pub fn insert_data(args: Cli) -> Result<()> {
     // Determine data types of the input file
-    let file_data_types = determine_file_data_types(&args.input)?;
+    let mut names_and_types = determine_non_geometry_types(&args)?;
     // Prepare database
-    prepare_postgis(&args, &file_data_types)?;
+    prepare_postgis(&args, &names_and_types)?;
+    // Determine geometry type
+    let names_and_types = determine_geometry_types(&args, &mut names_and_types)?;
 
     // Get data types
     let mut types: Vec<Type> = Vec::new();
-    for column in file_data_types.iter() {
+    for column in names_and_types.iter() {
         types.push(column.data_type.clone());
     }
-    // Get geometry type
-    let geom_type = infer_geometry_type(&args.table, &args.schema, &args.uri)?;
-    // Add geometry type to types
-    types.push(geom_type);
 
     // Read geojson file
     let geojson = read_geojson(&args.input)?;
@@ -60,7 +58,8 @@ pub fn insert_data(args: Cli) -> Result<()> {
                     .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
                 let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
                 row.push(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
-                insert_row(row, &file_data_types, &types, &args)?;
+                let query = prepare_query(&args, names_and_types);
+                insert_row(row, query, &types, &args)?;
             }
             println!("Data sucessfully inserted into database ✓");
         }
@@ -70,9 +69,24 @@ pub fn insert_data(args: Cli) -> Result<()> {
     Ok(())
 }
 
-pub fn determine_file_data_types(file_path: &str) -> Result<Vec<NameAndType>> {
+fn determine_geometry_types<'a>(
+    args: &Cli,
+    names_and_types: &'a mut Vec<NameAndType>,
+) -> Result<&'a mut Vec<NameAndType>> {
+    // Get geometry type
+    let geom_type = infer_geometry_type(&args.table, &args.schema, &args.uri)?;
+    // Add geometry type to types
+    names_and_types.push(NameAndType {
+        name: "geometry".to_string(),
+        data_type: geom_type,
+    });
+
+    Ok(names_and_types)
+}
+
+fn determine_non_geometry_types(args: &Cli) -> Result<Vec<NameAndType>> {
     let mut table_config: HashMap<String, Type> = HashMap::new();
-    let geojson_str = std::fs::read_to_string(file_path)?;
+    let geojson_str = std::fs::read_to_string(&args.input)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
 
     match geojson {
@@ -165,9 +179,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_determine_file_data_types() {
-        let file_path = "examples/geojson/spain.geojson";
-        let data_types = determine_file_data_types(file_path).unwrap();
+    fn test_determine_non_geometry_types() {
+        let args = Cli {
+            input: "examples/geojson/spain.geojson".to_string(),
+            uri: "postgresql://postgres:password@localhost:5432/postgres".to_string(),
+            table: "spain".to_string(),
+            schema: None,
+            srid: None,
+            mode: None,
+        };
+        let data_types = determine_non_geometry_types(&args).unwrap();
         assert_eq!(data_types.len(), 3);
         for data_type in data_types {
             match data_type.name.as_str() {
