@@ -63,10 +63,16 @@ pub fn create_table(
             Type::TEXT => {
                 query.push_str(&format!("{} TEXT,", column.name));
             }
+            Type::VARCHAR => {
+                query.push_str(&format!("{} TEXT,", column.name));
+            }
             Type::BOOL => {
                 query.push_str(&format!("{} BOOL,", column.name));
             }
-            _ => println!("Type currently not supported ✘"),
+            Type::DATE => {
+                query.push_str(&format!("{} DATE,", column.name));
+            }
+            _ => println!("Type '{:?}' currently not supported ✘", column.data_type),
         }
     }
 
