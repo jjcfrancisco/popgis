@@ -2,14 +2,14 @@ use crate::Result;
 use bytes::BytesMut;
 use postgres::types::to_sql_checked;
 use postgres::types::{IsNull, ToSql, Type};
-use postgres::Statement;
 use std::error::Error;
 
 use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
-use crate::pg::crud::create_connection;
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
+use crate::file_types::common::{AcceptedTypes, NameAndType};
+use crate::pg::ops::create_connection;
+use crate::utils::cli::Cli;
 
 #[derive(Debug)]
 pub struct Wkb {
@@ -33,30 +33,24 @@ impl ToSql for Wkb {
     to_sql_checked!();
 }
 
-pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
+pub fn infer_geometry_type(
+    table_name: &str,
+    schema_name: &Option<String>,
+    uri: &str,
+) -> Result<Type> {
+    let mut client = create_connection(uri)?;
+    let stmt = if let Some(schema) = schema_name {
+        client.prepare(&format!("SELECT geom FROM {}.{}", schema, table_name))?
+    } else {
+        client.prepare(&format!("SELECT geom FROM {}", table_name))?
+    };
     let column = stmt.columns().first().expect("Failed to get columns ✘");
     Ok(column.type_().clone())
 }
 
-pub fn insert_rows(
-    rows: &Rows,
-    config: &[NewTableTypes],
-    geom_type: Type,
-    uri: &str,
-    schema: &Option<String>,
-    table: &str,
-) -> Result<()> {
-    // Create connection
-    let mut client = create_connection(uri)?;
-
-    // Prepare types for binary copy
-    let mut types: Vec<Type> = Vec::new();
-    for column in config.iter() {
-        types.push(column.data_type.clone());
-    }
-    types.push(geom_type);
-
-    // Binary copy in writer
+pub fn prepare_query(args: &Cli, names_and_types: &[NameAndType]) -> String {
+    let schema = &args.schema;
+    let table = &args.table;
     let mut query = String::from("COPY ");
     if let Some(schema) = schema {
         query.push_str(&format!("{}.{}", schema, table));
@@ -64,60 +58,69 @@ pub fn insert_rows(
         query.push_str(table);
     }
     query.push_str(" (");
-    for column in config.iter() {
-        query.push_str(&format!("{},", column.column_name));
+    for column in names_and_types.iter() {
+        query.push_str(&format!("{},", column.name));
     }
     query.push_str("geom) FROM stdin BINARY");
+    query
+}
+
+pub fn insert_row(
+    row: Vec<AcceptedTypes>,
+    // names_and_types: &[NameAndType],
+    query: String,
+    types: &Vec<Type>,
+    args: &Cli,
+) -> Result<()> {
+    // Create connection
+    let mut client = create_connection(&args.uri)?;
+
+    // Create copy in writer
     let writer: CopyInWriter = client.copy_in(&query)?;
 
-    let mut writer = BinaryCopyInWriter::new(writer, &types);
+    // Create binary copy in writer
+    let mut writer = BinaryCopyInWriter::new(writer, types);
 
     // Use to test if types are correct
     if std::env::var("DEBUG").is_ok() {
         println!("DEBUG || {:?}", types);
     }
 
-    println!("Inserting data into database...");
-
-    for row in rows.row.iter() {
-        // Transform row into vector of ToSql
-        let mut tosql: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        for column in row.columns.iter() {
-            match column {
-                AcceptedTypes::Int(value) => {
-                    tosql.push(value);
-                }
-                AcceptedTypes::Float(value) => {
-                    tosql.push(value);
-                }
-                AcceptedTypes::Double(value) => {
-                    tosql.push(value);
-                }
-                AcceptedTypes::Text(value) => {
-                    tosql.push(value);
-                }
-                AcceptedTypes::Bool(value) => {
-                    tosql.push(value);
-                }
-                AcceptedTypes::Geometry(value) => {
-                    tosql.push(value);
-                }
+    // Transform row into vector of ToSql
+    let mut tosql: Vec<&(dyn ToSql + Sync)> = Vec::new();
+    for column in row.iter() {
+        match column {
+            AcceptedTypes::Int(value) => {
+                tosql.push(value);
+            }
+            AcceptedTypes::Float(value) => {
+                tosql.push(value);
+            }
+            AcceptedTypes::Double(value) => {
+                tosql.push(value);
+            }
+            AcceptedTypes::Text(value) => {
+                tosql.push(value);
+            }
+            AcceptedTypes::Bool(value) => {
+                tosql.push(value);
+            }
+            AcceptedTypes::Geometry(value) => {
+                tosql.push(value);
             }
         }
-
-        // Convert the vector to a slice of references
-        let vec_slice: &[&(dyn ToSql + Sync)] = &tosql;
-
-        // Write row to database
-        writer
-            .write(vec_slice)
-            .expect("Failed to insert row into database ✘");
     }
+
+    // Convert the vector to a slice of references
+    let vec_slice: &[&(dyn ToSql + Sync)] = &tosql;
+
+    // Write row to database
+    writer
+        .write(vec_slice)
+        .expect("Failed to insert row into database ✘");
 
     // Finish writing
     writer.finish()?;
-
-    println!("Data sucessfully inserted into database ✓");
 
     Ok(())
 }
