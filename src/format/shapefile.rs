@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use postgres::types::Type;
 use shapefile::dbase::FieldValue;
 
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Row, Rows};
-use crate::file_types::geo::to_geo;
+use crate::format::common::{AcceptedTypes, NewTableTypes, Row, Rows};
+use crate::format::geo::to_geo;
 use crate::pg::binary_copy::Wkb;
 use wkb::geom_to_wkb;
 

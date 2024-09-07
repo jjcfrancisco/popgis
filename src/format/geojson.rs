@@ -6,7 +6,7 @@ use postgres::types::Type;
 use serde_json;
 use wkb::geom_to_wkb;
 
-use crate::file_types::common::{AcceptedTypes, Row, Rows};
+use crate::format::common::{AcceptedTypes, Row, Rows};
 use crate::pg::binary_copy::Wkb;
 
 use super::common::NewTableTypes;

@@ -9,7 +9,7 @@ use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
 use crate::pg::crud::create_connection;
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
+use crate::format::common::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
 pub struct Wkb {

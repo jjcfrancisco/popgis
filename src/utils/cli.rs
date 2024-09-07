@@ -1,8 +1,8 @@
 use crate::{Result, Error};
-use crate::file_types::common::{FileType, determine_file_type};
+use crate::format::common::{FileType, determine_file_type};
+use crate::format::shapefile;
+use crate::format::geojson;
 use crate::utils::validate::validate_args;
-use crate::file_types::shapefile;
-use crate::file_types::geojson;
 use crate::pg::crud::{create_table, create_schema, check_table_exists, drop_table, get_stmt, can_append};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 

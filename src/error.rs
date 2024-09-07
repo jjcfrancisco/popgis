@@ -12,7 +12,7 @@ pub enum Error {
     TableExists(String),
     CannotAppend(String),
 
-    // -- file_types
+    // -- format
     UnsupportedFileExtension(String),
     UnsupportedShapeType(String),
     MixedDataTypes(String),

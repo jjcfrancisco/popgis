@@ -4,7 +4,7 @@ pub use self::error::{Error, Result};
 
 mod utils;
 mod pg;
-mod file_types;
+mod format;
 
 use utils::cli::run;
 

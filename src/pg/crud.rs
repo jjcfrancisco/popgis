@@ -4,7 +4,7 @@ use postgres::Statement;
 
 use postgres::{Client, NoTls};
 
-use crate::file_types::common::NewTableTypes;
+use crate::format::common::NewTableTypes;
 
 pub fn create_connection(uri: &str) -> Result<Client> {
     let client = Client::connect(uri, NoTls)?;
