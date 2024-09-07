@@ -2,9 +2,7 @@ use crate::format::common::{determine_file_type, FileType};
 use crate::format::geojson;
 use crate::format::shapefile;
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
-use crate::pg::crud::{
-    can_append, check_table_exists, create_schema, create_table, drop_table, get_stmt,
-};
+use crate::pg::crud::{check_table_exists, create_schema, create_table, drop_table, get_stmt};
 use crate::utils::validate::validate_args;
 use crate::{Error, Result};
 
@@ -34,7 +32,7 @@ pub struct Cli {
     #[arg(long)]
     pub srid: Option<i32>,
 
-    /// Mode: overwrite, append, fail. Optional.
+    /// Mode: overwrite or fail. Optional.
     #[arg(short, long)]
     pub mode: Option<String>,
 
@@ -74,17 +72,13 @@ pub fn run() -> Result<()> {
                 drop_table(&args.table, &args.schema, &args.uri)?;
                 true
             }
-            "append" => {
-                can_append(&args.table, &args.schema, &args.uri)?;
-                false
-            }
             "fail" => {
                 check_table_exists(&args.table, &args.schema, &args.uri)?;
                 true
             }
             _ => {
                 println!("Mode not supported ✘");
-                return Err(Error::FailedValidation("Mode not supported ✘".into()));
+                return Err(Error::FailedValidation("❌ Mode not supported".into()));
             }
         }
     } else {

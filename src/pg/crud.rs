@@ -55,7 +55,7 @@ pub fn create_table(
             Type::BOOL => {
                 query.push_str(&format!("{} BOOL,", column.column_name));
             }
-            _ => println!("Type currently not supported ✘"),
+            _ => println!("❌ Type currently not supported"),
         }
     }
     query.push_str(&format!("geom Geometry(Geometry, {})", srid));
@@ -68,40 +68,16 @@ pub fn create_table(
 
     // If schema, println with schema
     if let Some(schema) = schema_name {
-        println!("\nSchema '{}' created ✓", schema);
-        println!("Table '{}' created ✓", table_name);
+        println!("\n✅ Schema '{}' created", schema);
+        println!("✅ Table '{}' created", table_name);
     } else {
-        println!("Table '{}' created ✓", table_name);
+        println!("✅ Table '{}' created", table_name);
     }
 
     let mut client = create_connection(uri)?;
     client.execute(&query, &[])?;
 
     Ok(())
-}
-
-pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
-    let mut client = create_connection(uri)?;
-    let query = if let Some(schema) = schema_name {
-        format!(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = '{}' AND table_name = '{}')",
-            schema, table_name
-        )
-    } else {
-        format!(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{}')",
-            table_name
-        )
-    };
-    let exists: bool = client.query_one(&query, &[])?.get(0);
-    // If exists, return Ok
-    if exists {
-        Ok(())
-    } else {
-        Err(Error::CannotAppend(
-            "Cannot append to a table that does NOT exist ✘".into(),
-        ))
-    }
 }
 
 pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
@@ -120,7 +96,7 @@ pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &
     let exists: bool = client.query_one(&query, &[])?.get(0);
     // If exists, throw error
     if exists {
-        Err(Error::TableExists("Table already exists ✘".into()))
+        Err(Error::TableExists("❌ Table already exists".into()))
     } else {
         Ok(())
     }

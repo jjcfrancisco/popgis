@@ -44,7 +44,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] != Type::INT8
                                 {
                                     return Err(Error::MixedDataTypes(
-                                        "Column contains mixed data types ✘".to_string(),
+                                        "❌ Column contains mixed data types".to_string(),
                                     ));
                                 } else {
                                     table_config.insert(key, Type::FLOAT8);
@@ -59,7 +59,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] != Type::INT8
                                 {
                                     return Err(Error::MixedDataTypes(
-                                        "Column contains mixed data types ✘".to_string(),
+                                        "❌ Column contains mixed data types".to_string(),
                                     ));
                                 } else {
                                     table_config.insert(key, Type::TEXT);
@@ -74,7 +74,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                     && table_config[&key] != Type::INT8
                                 {
                                     return Err(Error::MixedDataTypes(
-                                        "Column contains mixed data types ✘".to_string(),
+                                        "❌ Column contains mixed data types".to_string(),
                                     ));
                                 } else {
                                     table_config.insert(key, Type::BOOL);
@@ -82,13 +82,13 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                             }
                             // If null
                             serde_json::Value::Null => continue,
-                            _ => println!("Type currently not supported ✘"),
+                            _ => println!("❌ Type currently not supported"),
                         }
                     }
                 }
             }
         }
-        _ => println!("Not a feature collection ✘"),
+        _ => println!("❌ Not a feature collection"),
     }
 
     let mut data_types: Vec<NewTableTypes> = Vec::new();
@@ -135,14 +135,14 @@ pub fn read_geojson(args: &Cli) -> Result<Rows> {
                         serde_json::Value::Null => {
                             row.add(AcceptedTypes::Text(None));
                         }
-                        _ => println!("Type currently not supported ✘"),
+                        _ => println!("❌ Type currently not supported"),
                     }
                 }
                 let gj_geom = feature.geometry.unwrap();
                 let mut geom: geo::Geometry<f64> = gj_geom
                     .value
                     .try_into()
-                    .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
+                    .expect("❌ Failed to convert geojson::Geometry to geo::Geometry");
                 // Reproject
                 geom = if args.reproject.is_some() {
                     let from = format!("EPSG:{}", args.srid.unwrap());
@@ -153,13 +153,13 @@ pub fn read_geojson(args: &Cli) -> Result<Rows> {
                 } else {
                     geom
                 };
-                let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
+                let wkb = geom_to_wkb(&geom).expect("❌ Could not convert geometry to WKB");
                 // Check length of row
                 row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
                 rows.add(row);
             }
         }
-        _ => println!("Not a feature collection ✘"),
+        _ => println!("❌ Not a feature collection"),
     }
 
     Ok(rows)

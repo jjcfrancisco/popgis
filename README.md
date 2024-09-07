@@ -35,7 +35,7 @@ Below are the available commands and flags for Popgis.
 
 `srid`: choose either 4326 (WGS84) or 3857 (Web Mercator).  **Optional**. *Default is 4326.*
 
-`mode` (short: `-m`): choose either **overwrite**, **append** or **fail** modes. Read more [here](#modes).
+`mode` (short: `-m`): choose either **overwrite** or **fail** modes. Read more [here](#modes).
 
 #### Examples
 ```bash
@@ -55,7 +55,7 @@ popgis -i water_polygons.shp \
 ```
 
 #### Modes
-The **overwrite** mode will delete existing table if name of schema/table is the same and will write into the new table. The **append** mode only inserts new data into the existing table. The **fail** mode, it ensures that if the table already exists in the database, the job will fail to prevent data loss.
+The **overwrite** mode will delete existing table if name of schema/table is the same and will write into the new table. The **fail** mode, it ensures that if the table already exists in the database, the job will fail to prevent data loss.
 
 ## Benchmarks
 Although non extensive, the benchmarking shows **Popgis is twice faster than ogr2ogr**. This is most noticeable with large files.
@@ -80,8 +80,10 @@ Although non extensive, the benchmarking shows **Popgis is twice faster than ogr
 
 ## Future implementations
 
-* Project from 4326 to 3857 (and viceversa).
 * Allow nested GeoJSON properties.
+* Add GeoParquet support.
+* From PostGIS to GeoJSON/ShapeFile.
+* Reintroduce the append mode (temporarily removed in `v0.4.0` due to inconsistent results).
 
 ## License
 See [`LICENSE`](./LICENSE)

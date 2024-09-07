@@ -27,7 +27,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::INT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
@@ -42,7 +42,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::INT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
@@ -57,7 +57,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::INT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
@@ -72,7 +72,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::FLOAT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::INT8);
@@ -87,7 +87,7 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::INT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::TEXT);
@@ -102,13 +102,13 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                         && table_config[&column_name] != Type::INT8
                     {
                         return Err(Error::MixedDataTypes(
-                            "Column contains mixed data types ✘".to_string(),
+                            "❌ Column contains mixed data types".to_string(),
                         ));
                     } else {
                         table_config.insert(column_name, Type::BOOL);
                     }
                 }
-                _ => println!("Type currently not supported ✘"),
+                _ => println!("❌ Type currently not supported"),
             }
         }
     }
@@ -150,7 +150,7 @@ pub fn read_shapefile(args: &Cli) -> Result<Rows> {
                 FieldValue::Logical(value) => {
                     row.add(AcceptedTypes::Bool(value));
                 }
-                _ => println!("Type currently not supported ✘"),
+                _ => println!("❌ Type currently not supported"),
             }
         }
 
@@ -165,7 +165,7 @@ pub fn read_shapefile(args: &Cli) -> Result<Rows> {
         } else {
             geom
         };
-        let wkb = geom_to_wkb(&geom).expect("Failed to insert node into database ✘");
+        let wkb = geom_to_wkb(&geom).expect("❌ Failed to insert node into database");
         row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
         rows.add(row);
     }
