@@ -57,7 +57,7 @@ pub fn run() -> Result<()> {
     let file_type = determine_file_type(&args.input)?;
     let (rows, config) = match file_type {
         FileType::Shapefile => (
-            shapefile::read_shapefile(&args.input)?,
+            shapefile::read_shapefile(&args)?,
             shapefile::determine_data_types(&args.input)?,
         ),
         FileType::GeoJson => (

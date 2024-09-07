@@ -143,7 +143,7 @@ pub fn read_geojson(args: &Cli) -> Result<Rows> {
                     .value
                     .try_into()
                     .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
-                // If reprojecting
+                // Reproject
                 geom = if args.reproject.is_some() {
                     let from = format!("EPSG:{}", args.srid.unwrap());
                     let to = format!("EPSG:{}", args.reproject.unwrap());
