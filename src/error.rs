@@ -10,9 +10,8 @@ pub enum Error {
 
     // -- pg
     TableExists(String),
-    CannotAppend(String),
 
-    // -- file_types
+    // -- format
     UnsupportedFileExtension(String),
     UnsupportedShapeType(String),
     MixedDataTypes(String),
@@ -24,6 +23,10 @@ pub enum Error {
     Pg(postgres::Error),
     #[from]
     Shapefile(shapefile::Error),
+    #[from]
+    Proj(proj::ProjCreateError),
+    #[from]
+    ProjTransform(proj::ProjError),
 }
 
 // region:    --- Error Boilerplate

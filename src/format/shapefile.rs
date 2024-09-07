@@ -1,12 +1,14 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 
-use std::collections::HashMap;
 use postgres::types::Type;
+use proj::{Proj, Transform};
 use shapefile::dbase::FieldValue;
+use std::collections::HashMap;
 
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Row, Rows};
-use crate::file_types::geo::to_geo;
+use crate::format::common::{AcceptedTypes, NewTableTypes, Row, Rows};
+use crate::format::geo::to_geo;
 use crate::pg::binary_copy::Wkb;
+use crate::utils::cli::Cli;
 use wkb::geom_to_wkb;
 
 pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
@@ -24,7 +26,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -37,7 +41,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -50,7 +56,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::FLOAT8);
                     }
@@ -63,7 +71,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::FLOAT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::INT8);
                     }
@@ -76,7 +86,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::TEXT);
                     }
@@ -89,12 +101,14 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                     } else if table_config.contains_key(&column_name)
                         && table_config[&column_name] != Type::INT8
                     {
-                        return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                        return Err(Error::MixedDataTypes(
+                            "❌ Column contains mixed data types".to_string(),
+                        ));
                     } else {
                         table_config.insert(column_name, Type::BOOL);
                     }
                 }
-                _ => println!("Type currently not supported ✘"),
+                _ => println!("❌ Type currently not supported"),
             }
         }
     }
@@ -110,9 +124,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     Ok(data_types)
 }
 
-pub fn read_shapefile(file_path: &str) -> Result<Rows> {
+pub fn read_shapefile(args: &Cli) -> Result<Rows> {
     let mut rows = Rows::new();
-    let mut reader = shapefile::Reader::from_path(file_path)?;
+    let mut reader = shapefile::Reader::from_path(&args.input)?;
     for shape_record in reader.iter_shapes_and_records() {
         let mut row = Row::new();
         let (shape, record) = shape_record?;
@@ -136,12 +150,22 @@ pub fn read_shapefile(file_path: &str) -> Result<Rows> {
                 FieldValue::Logical(value) => {
                     row.add(AcceptedTypes::Bool(value));
                 }
-                _ => println!("Type currently not supported ✘"),
+                _ => println!("❌ Type currently not supported"),
             }
         }
 
-        let geom = to_geo(&shape)?;
-        let wkb = geom_to_wkb(&geom).expect("Failed to insert node into database ✘");
+        let mut geom = to_geo(&shape)?;
+        // Reproject
+        geom = if args.reproject.is_some() {
+            let from = format!("EPSG:{}", args.srid.unwrap());
+            let to = format!("EPSG:{}", args.reproject.unwrap());
+            let proj = Proj::new_known_crs(&from, &to, None)?;
+            geom.transform(&proj)?;
+            geom
+        } else {
+            geom
+        };
+        let wkb = geom_to_wkb(&geom).expect("❌ Failed to insert node into database");
         row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));
         rows.add(row);
     }
@@ -168,7 +192,18 @@ mod tests {
     #[test]
     fn test_read_shapefile() {
         let file_path = "examples/shapefile/andalucia.shp";
-        let rows = read_shapefile(file_path).unwrap();
+        let args = Cli {
+            input: file_path.to_string(),
+            srid: None,
+            reproject: None,
+            uri: "postgresql://postgres:password@localhost:5432/postgres"
+                .parse()
+                .unwrap(),
+            table: "andalucia".to_string(),
+            schema: None,
+            mode: None,
+        };
+        let rows = read_shapefile(&args).unwrap();
         assert_eq!(rows.row.len(), 36);
     }
 }

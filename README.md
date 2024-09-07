@@ -2,40 +2,37 @@
 A blazing fast way to insert large GeoJSON & ShapeFile into a PostGIS database.
 
 ## Why?
-Importing large datasets into a PostGIS database can take a long time and the aim of Popgis is to optimize the performance of such operations. **Popgis is 2x faster than ogr2ogr**, particularly with very large input files against remote databases. Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
+Importing large datasets into a PostGIS database can take a long time and the aim of PopGIS is to optimize the performance of such operations. **PopGIS is 2x faster than ogr2ogr**, particularly with very large input files against remote databases. Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
 
 ## Installation
-
-### Cargo
-If you prefer using Cargo, you can install Popgis directly by running the Cargo install command
+You can install PopGIS directly by running the Cargo install command
 ```bash
 cargo install popgis
 ```
 
-### Homebrew
-For macOS users with Homebrew, you can install Popgis by adding the appropriate Homebrew tap
-```bash
-brew tap jjcfrancisco/popgis
-brew install popgis
-popgis --help
-```
-
 ## Usage
-Below are the available commands and flags for Popgis. 
+Below are the available commands and flags for PopGIS: 
 
-#### Flags
+#### `input`
+specifies the path to the GeoJSON or ShapeFile you'd like to insert into a PostGIS database.
 
-`input` (short: `-i`): choose the *geojson* or *shapefile* file to insert into a PostGIS database.
+#### `uri`
+specifies the URI of the PostGIS database where you'd like to insert the input data.
 
-`uri` (short: `-u`): the PostGIS database where you'd like to insert the input data.
+#### `schema`
+specifies the schema where the table will be created. **Optional**. *Default is public.*
 
-`schema` (short: `-s`): where you would like the specified table. **Optional**. *Default is public.*
+#### `table`
+specifies the name of the resulting table.
 
-`table` (short: `-t`): choose the name of the resulting table.
+#### `srid`
+specifies the SRID of the input data. **Optional**. *Default is 4326.*
 
-`srid`: choose either 4326 (WGS84) or 3857 (Web Mercator).  **Optional**. *Default is 4326.*
+#### `mode`
+specifies the mode of the operation. **Optional**. *Default is overwrite*. Read more [here](#modes).
 
-`mode` (short: `-m`): choose either **overwrite**, **append** or **fail** modes. Read more [here](#modes).
+#### `reproject`
+reprojects the input data to the specified SRID. **Optional**.
 
 #### Examples
 ```bash
@@ -52,13 +49,22 @@ popgis -i water_polygons.shp \
        -s osm \
        -t waters
        -m overwrite
+
+## Reproject a GeoJSON from 4326 to 3857 -> PostGIS ##
+popgis --input spain.geojson \
+       --uri postgresql://my_username:my_password@localhost:5432/my_database \
+       --schema osm \
+       --table waters \
+       --srid 4326 \
+       --reproject 3857
+
 ```
 
 #### Modes
-The **overwrite** mode will delete existing table if name of schema/table is the same and will write into the new table. The **append** mode only inserts new data into the existing table. The **fail** mode, it ensures that if the table already exists in the database, the job will fail to prevent data loss.
+The **overwrite** mode will delete existing table if name of schema/table is the same and will write into the new table. The **fail** mode, it ensures that if the table already exists in the database, the job will fail to prevent data loss.
 
 ## Benchmarks
-Although non extensive, the benchmarking shows **Popgis is twice faster than ogr2ogr**. This is most noticeable with large files.
+Although non extensive, the benchmarking shows **PopGIS is twice faster than ogr2ogr**. This is most noticeable with large files.
 
 ### ShapeFile
 
@@ -78,15 +84,15 @@ Although non extensive, the benchmarking shows **Popgis is twice faster than ogr
 
 > The file used for this test can be found [here](https://data.cityofnewyork.us/City-Government/NYC-Street-Centerline-CSCL-/exjm-f27b).
 
-## Future implementation
-The list below contains the upcoming implementations.
+## Future implementations
 
-* Project from 4326 to 3857 (and viceversa).
-* Allow nested GeoJSON properties.
-* Reduce precision of a GeoJSON file.
-* New validate command to validate files.
-* Merge two columns of different types.
+* Add GeoParquet support.
+* From PostGIS to GeoJSON/ShapeFile.
+* Reintroduce the append mode (temporarily removed in `v0.4.0` due to inconsistent results).
 
+## Limitations
+
+* PopGIS does not currently support nested GeoJSON properties.
 
 ## License
 See [`LICENSE`](./LICENSE)

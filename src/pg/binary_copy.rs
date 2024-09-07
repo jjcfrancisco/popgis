@@ -9,7 +9,7 @@ use postgres::binary_copy::BinaryCopyInWriter;
 use postgres::CopyInWriter;
 
 use crate::pg::crud::create_connection;
-use crate::file_types::common::{AcceptedTypes, NewTableTypes, Rows};
+use crate::format::common::{AcceptedTypes, NewTableTypes, Rows};
 
 #[derive(Debug)]
 pub struct Wkb {
@@ -34,7 +34,7 @@ impl ToSql for Wkb {
 }
 
 pub fn infer_geom_type(stmt: Statement) -> Result<Type> {
-    let column = stmt.columns().first().expect("Failed to get columns ✘");
+    let column = stmt.columns().first().expect("❌ Failed to get columns");
     Ok(column.type_().clone())
 }
 
@@ -111,13 +111,13 @@ pub fn insert_rows(
         // Write row to database
         writer
             .write(vec_slice)
-            .expect("Failed to insert row into database ✘");
+            .expect("❌ Failed to insert row into database");
     }
 
     // Finish writing
     writer.finish()?;
 
-    println!("Data sucessfully inserted into database ✓");
+    println!("🎉 Data sucessfully inserted into database");
 
     Ok(())
 }

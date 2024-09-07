@@ -1,4 +1,4 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 use postgres::types::Type;
 use std::path::Path;
@@ -23,7 +23,9 @@ pub struct Rows {
 
 impl Row {
     pub fn new() -> Self {
-        Row { columns: Vec::new() }
+        Row {
+            columns: Vec::new(),
+        }
     }
     pub fn add(&mut self, column: AcceptedTypes) {
         self.columns.push(column);
@@ -60,14 +62,16 @@ pub enum FileType {
 pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     let file_extension = Path::new(input_file)
         .extension()
-        .expect("No file extension found ✘");
+        .expect("❌ No file extension found");
     let file_extension_str = file_extension
         .to_str()
-        .expect("Could not convert file extension to string ✘");
+        .expect("❌ Could not convert file extension to string");
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
-        _ => Err(Error::UnsupportedFileExtension("Unsupported file type ✘".into())),
+        _ => Err(Error::UnsupportedFileExtension(
+            "❌ Unsupported file type".into(),
+        )),
     }
 }
 
