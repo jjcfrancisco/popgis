@@ -24,6 +24,10 @@ pub enum Error {
     Pg(postgres::Error),
     #[from]
     Shapefile(shapefile::Error),
+    #[from]
+    Proj(proj::ProjCreateError),
+    #[from]
+    ProjTransform(proj::ProjError),
 }
 
 // region:    --- Error Boilerplate

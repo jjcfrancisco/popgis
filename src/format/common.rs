@@ -1,6 +1,7 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 use postgres::types::Type;
+use proj::{Proj, Transform};
 use std::path::Path;
 
 use crate::pg::binary_copy::Wkb;
@@ -23,7 +24,9 @@ pub struct Rows {
 
 impl Row {
     pub fn new() -> Self {
-        Row { columns: Vec::new() }
+        Row {
+            columns: Vec::new(),
+        }
     }
     pub fn add(&mut self, column: AcceptedTypes) {
         self.columns.push(column);
@@ -67,8 +70,17 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
-        _ => Err(Error::UnsupportedFileExtension("Unsupported file type ✘".into())),
+        _ => Err(Error::UnsupportedFileExtension(
+            "Unsupported file type ✘".into(),
+        )),
     }
+}
+
+fn reproject(from: &str, to: &str, geom: &mut geo::Geometry) -> Result<geo::Geometry> {
+    let proj = Proj::new_known_crs(&from, &to, None)?;
+    geom.transform(&proj)?;
+
+    Ok(geom.clone())
 }
 
 #[cfg(test)]

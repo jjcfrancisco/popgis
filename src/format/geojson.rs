@@ -1,9 +1,11 @@
-use crate::{Result, Error};
+use crate::utils::cli::Cli;
+use crate::{Error, Result};
 
-use std::collections::HashMap;
 use geojson::GeoJson;
 use postgres::types::Type;
+use proj::{Proj, Transform};
 use serde_json;
+use std::collections::HashMap;
 use wkb::geom_to_wkb;
 
 use crate::format::common::{AcceptedTypes, Row, Rows};
@@ -41,7 +43,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::FLOAT8);
                                 }
@@ -54,7 +58,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::TEXT);
                                 }
@@ -67,7 +73,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
                                 } else if table_config.contains_key(&key)
                                     && table_config[&key] != Type::INT8
                                 {
-                                    return Err(Error::MixedDataTypes("Column contains mixed data types ✘".to_string()));
+                                    return Err(Error::MixedDataTypes(
+                                        "Column contains mixed data types ✘".to_string(),
+                                    ));
                                 } else {
                                     table_config.insert(key, Type::BOOL);
                                 }
@@ -94,9 +102,9 @@ pub fn determine_data_types(file_path: &str) -> Result<Vec<NewTableTypes>> {
     Ok(data_types)
 }
 
-pub fn read_geojson(file_path: &str) -> Result<Rows> {
+pub fn read_geojson(args: &Cli) -> Result<Rows> {
     let mut rows = Rows::new();
-    let geojson_str = std::fs::read_to_string(file_path)?;
+    let geojson_str = std::fs::read_to_string(&args.input)?;
     let geojson = geojson_str.parse::<GeoJson>().unwrap();
 
     match geojson {
@@ -131,10 +139,20 @@ pub fn read_geojson(file_path: &str) -> Result<Rows> {
                     }
                 }
                 let gj_geom = feature.geometry.unwrap();
-                let geom: geo::Geometry<f64> = gj_geom
+                let mut geom: geo::Geometry<f64> = gj_geom
                     .value
                     .try_into()
                     .expect("Failed to convert geojson::Geometry to geo::Geometry ✘");
+                // If reprojecting
+                geom = if args.reproject.is_some() {
+                    let from = format!("EPSG:{}", args.srid.unwrap());
+                    let to = format!("EPSG:{}", args.reproject.unwrap());
+                    let proj = Proj::new_known_crs(&from, &to, None)?;
+                    geom.transform(&proj)?;
+                    geom
+                } else {
+                    geom
+                };
                 let wkb = geom_to_wkb(&geom).expect("Could not convert geometry to WKB ✘");
                 // Check length of row
                 row.add(AcceptedTypes::Geometry(Some(Wkb { geometry: wkb })));

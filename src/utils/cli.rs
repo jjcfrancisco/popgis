@@ -1,18 +1,21 @@
-use crate::{Result, Error};
-use crate::format::common::{FileType, determine_file_type};
-use crate::format::shapefile;
+use std::i32;
+
+use crate::format::common::{determine_file_type, FileType};
 use crate::format::geojson;
-use crate::utils::validate::validate_args;
-use crate::pg::crud::{create_table, create_schema, check_table_exists, drop_table, get_stmt, can_append};
+use crate::format::shapefile;
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
+use crate::pg::crud::{
+    can_append, check_table_exists, create_schema, create_table, drop_table, get_stmt,
+};
+use crate::utils::validate::validate_args;
+use crate::{Error, Result};
 
 use clap::Parser;
 
-/// A blazing fast way to insert GeoJSON & ShapeFiles into a PostGIS database 
+/// A blazing fast way to insert GeoJSON & ShapeFiles into a PostGIS database
 #[derive(Parser, Debug)]
 #[command(about, version)]
 pub struct Cli {
-
     /// Input file path, either shapefile or geojson
     #[arg(short, long)]
     pub input: String,
@@ -36,6 +39,10 @@ pub struct Cli {
     /// Mode: overwrite, append, fail. Optional.
     #[arg(short, long)]
     pub mode: Option<String>,
+
+    /// Reproject: reproject to 4326 or 3857. Optional.
+    #[arg(short, long)]
+    pub reproject: Option<i32>,
 }
 
 pub fn run() -> Result<()> {
@@ -49,12 +56,14 @@ pub fn run() -> Result<()> {
 
     let file_type = determine_file_type(&args.input)?;
     let (rows, config) = match file_type {
-        FileType::Shapefile => {
-            (shapefile::read_shapefile(&args.input)?, shapefile::determine_data_types(&args.input)?)
-        }
-        FileType::GeoJson => {
-            (geojson::read_geojson(&args.input)?, geojson::determine_data_types(&args.input)?)
-        }
+        FileType::Shapefile => (
+            shapefile::read_shapefile(&args.input)?,
+            shapefile::determine_data_types(&args.input)?,
+        ),
+        FileType::GeoJson => (
+            geojson::read_geojson(&args)?,
+            geojson::determine_data_types(&args.input)?,
+        ),
     };
 
     // If mode not present, check if table exists
@@ -89,16 +98,30 @@ pub fn run() -> Result<()> {
         if let Some(schema) = &args.schema {
             create_schema(schema, &args.uri)?;
         }
-        if let Some(srid) = args.srid {
-            create_table(&args.table, &args.schema, &config, &args.uri, srid)?
-        } else {
-            create_table(&args.table, &args.schema, &config, &args.uri, 4326)?
-        };
+        //
+        if let Some(reproject) = args.reproject {
+            create_table(&args.table, &args.schema, &config, &args.uri, reproject)?
+        } else if None == args.reproject {
+            create_table(
+                &args.table,
+                &args.schema,
+                &config,
+                &args.uri,
+                args.srid.unwrap(),
+            )?
+        }
     }
 
-    let stmt = get_stmt(&args.table, &args.schema, &args.uri)?; 
+    let stmt = get_stmt(&args.table, &args.schema, &args.uri)?;
     let geom_type = infer_geom_type(stmt)?;
-    insert_rows(&rows, &config, geom_type, &args.uri, &args.schema, &args.table)?;
+    insert_rows(
+        &rows,
+        &config,
+        geom_type,
+        &args.uri,
+        &args.schema,
+        &args.table,
+    )?;
 
     Ok(())
 }

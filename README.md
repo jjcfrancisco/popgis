@@ -78,15 +78,10 @@ Although non extensive, the benchmarking shows **Popgis is twice faster than ogr
 
 > The file used for this test can be found [here](https://data.cityofnewyork.us/City-Government/NYC-Street-Centerline-CSCL-/exjm-f27b).
 
-## Future implementation
-The list below contains the upcoming implementations.
+## Future implementations
 
 * Project from 4326 to 3857 (and viceversa).
 * Allow nested GeoJSON properties.
-* Reduce precision of a GeoJSON file.
-* New validate command to validate files.
-* Merge two columns of different types.
-
 
 ## License
 See [`LICENSE`](./LICENSE)

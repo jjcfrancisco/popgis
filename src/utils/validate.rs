@@ -44,7 +44,8 @@ mod tests {
             table: "points".to_string(),
             schema: None,
             srid: None,
-            mode: None
+            mode: None,
+            reproject: None
         };
         assert!(validate_args(&args).is_ok());
     }
@@ -58,7 +59,8 @@ mod tests {
             table: "points".to_string(),
             schema: Some("gis".to_string()),
             srid: Some(4326),
-            mode: None
+            mode: None,
+            reproject: None
         };
         assert!(validate_args(&args).is_ok());
     }
