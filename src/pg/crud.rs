@@ -1,4 +1,4 @@
-use crate::{Result, Error};
+use crate::{Error, Result};
 use postgres::types::Type;
 use postgres::Statement;
 
@@ -78,7 +78,6 @@ pub fn create_table(
     client.execute(&query, &[])?;
 
     Ok(())
-
 }
 
 pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
@@ -97,17 +96,15 @@ pub fn can_append(table_name: &str, schema_name: &Option<String>, uri: &str) -> 
     let exists: bool = client.query_one(&query, &[])?.get(0);
     // If exists, return Ok
     if exists {
-        return Ok(());
+        Ok(())
     } else {
-        return Err(Error::CannotAppend("Cannot append to a table that does NOT exist ✘".into()));
+        Err(Error::CannotAppend(
+            "Cannot append to a table that does NOT exist ✘".into(),
+        ))
     }
 }
 
-pub fn check_table_exists(
-    table_name: &str,
-    schema_name: &Option<String>,
-    uri: &str,
-) -> Result<()> {
+pub fn check_table_exists(table_name: &str, schema_name: &Option<String>, uri: &str) -> Result<()> {
     let mut client = create_connection(uri)?;
     let query = if let Some(schema) = schema_name {
         format!(
@@ -123,9 +120,9 @@ pub fn check_table_exists(
     let exists: bool = client.query_one(&query, &[])?.get(0);
     // If exists, throw error
     if exists {
-        return Err(Error::TableExists("Table already exists ✘".into()));
+        Err(Error::TableExists("Table already exists ✘".into()))
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 

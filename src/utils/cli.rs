@@ -1,5 +1,3 @@
-use std::i32;
-
 use crate::format::common::{determine_file_type, FileType};
 use crate::format::geojson;
 use crate::format::shapefile;
@@ -101,7 +99,7 @@ pub fn run() -> Result<()> {
         //
         if let Some(reproject) = args.reproject {
             create_table(&args.table, &args.schema, &config, &args.uri, reproject)?
-        } else if None == args.reproject {
+        } else if args.reproject.is_none() {
             create_table(
                 &args.table,
                 &args.schema,

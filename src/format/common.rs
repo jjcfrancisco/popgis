@@ -1,7 +1,6 @@
 use crate::{Error, Result};
 
 use postgres::types::Type;
-use proj::{Proj, Transform};
 use std::path::Path;
 
 use crate::pg::binary_copy::Wkb;
@@ -74,13 +73,6 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
             "Unsupported file type ✘".into(),
         )),
     }
-}
-
-fn reproject(from: &str, to: &str, geom: &mut geo::Geometry) -> Result<geo::Geometry> {
-    let proj = Proj::new_known_crs(&from, &to, None)?;
-    geom.transform(&proj)?;
-
-    Ok(geom.clone())
 }
 
 #[cfg(test)]
