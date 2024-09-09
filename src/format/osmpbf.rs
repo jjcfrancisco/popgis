@@ -3,7 +3,7 @@ use crate::Result;
 
 use geo::{Geometry, LineString, Point, Polygon};
 use osmpbf::{Element, ElementReader};
-use std::{any::Any, collections::HashMap};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -13,7 +13,7 @@ struct OsmPbf {
 }
 
 fn build_nodes(file_path: &str) -> Result<HashMap<i64, OsmPbf>> {
-    let reader = ElementReader::from_path(&file_path)?;
+    let reader = ElementReader::from_path(file_path)?;
     let mut nodes = HashMap::<i64, OsmPbf>::new();
     _ = reader.for_each(|element| match element {
         Element::Node(node) => {
@@ -22,7 +22,6 @@ fn build_nodes(file_path: &str) -> Result<HashMap<i64, OsmPbf>> {
                 OsmPbf {
                     tags: node
                         .tags()
-                        .into_iter()
                         .map(|(key, value)| (key.to_string(), value.to_string()))
                         .collect(),
                     geometry: Geometry::Point(Point::new(node.lon(), node.lat())),
@@ -35,7 +34,6 @@ fn build_nodes(file_path: &str) -> Result<HashMap<i64, OsmPbf>> {
                 OsmPbf {
                     tags: dense_node
                         .tags()
-                        .into_iter()
                         .map(|(key, value)| (key.to_string(), value.to_string()))
                         .collect(),
                     geometry: Geometry::Point(Point::new(dense_node.lon(), dense_node.lat())),
@@ -52,11 +50,8 @@ fn build_polygon(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
     let mut points: Vec<(f64, f64)> = Vec::new();
     way.refs().for_each(|node_id| {
         if let Some(node) = nodes.get(&node_id) {
-            match node.geometry {
-                Geometry::Point(point) => {
-                    points.push((point.x(), point.y()));
-                }
-                _ => {}
+            if let Geometry::Point(point) = node.geometry {
+                points.push((point.x(), point.y()));
             }
         }
     });
@@ -64,7 +59,6 @@ fn build_polygon(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
     OsmPbf {
         tags: way
             .tags()
-            .into_iter()
             .map(|(key, value)| (key.to_string(), value.to_string()))
             .collect(),
         geometry: Geometry::Polygon(Polygon::new(LineString::from(points), vec![])),
@@ -75,18 +69,14 @@ fn build_line(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
     let mut points: Vec<(f64, f64)> = Vec::new();
     way.refs().for_each(|node_id| {
         if let Some(node) = nodes.get(&node_id) {
-            match node.geometry {
-                Geometry::Point(point) => {
-                    points.push((point.x(), point.y()));
-                }
-                _ => {}
+            if let Geometry::Point(point) = node.geometry {
+                points.push((point.x(), point.y()));
             }
         }
     });
     OsmPbf {
         tags: way
             .tags()
-            .into_iter()
             .map(|(key, value)| (key.to_string(), value.to_string()))
             .collect(),
         geometry: Geometry::LineString(LineString::from(points)),
@@ -94,15 +84,15 @@ fn build_line(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
 }
 
 fn build_polys_and_lines(file_path: &str, nodes: &HashMap<i64, OsmPbf>) -> Result<Vec<OsmPbf>> {
-    let reader = ElementReader::from_path(&file_path)?;
+    let reader = ElementReader::from_path(file_path)?;
     let mut all = Vec::<OsmPbf>::new();
     _ = reader.for_each(|element| match element {
         Element::Way(way) => {
             // If the way is closed, it's a polygon
             if way.refs().next() == way.refs().last() {
-                all.push(build_polygon(&way, &nodes));
+                all.push(build_polygon(&way, nodes));
             } else {
-                all.push(build_line(&way, &nodes));
+                all.push(build_line(&way, nodes));
             }
         }
         #[allow(unused_variables)]
