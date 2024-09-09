@@ -1,9 +1,9 @@
 use crate::utils::cli::Cli;
 use crate::Result;
 
-use geo::{MapCoords, Point};
+use geo::{Geometry, LineString, Point, Polygon};
 use osmpbf::{Element, ElementReader};
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -25,7 +25,7 @@ fn build_nodes(file_path: &str) -> Result<HashMap<i64, OsmPbf>> {
                         .into_iter()
                         .map(|(key, value)| (key.to_string(), value.to_string()))
                         .collect(),
-                    geometry: geo::Geometry::Point(Point::new(node.lon(), node.lat())),
+                    geometry: Geometry::Point(Point::new(node.lon(), node.lat())),
                 },
             );
         }
@@ -38,7 +38,7 @@ fn build_nodes(file_path: &str) -> Result<HashMap<i64, OsmPbf>> {
                         .into_iter()
                         .map(|(key, value)| (key.to_string(), value.to_string()))
                         .collect(),
-                    geometry: geo::Geometry::Point(Point::new(dense_node.lon(), dense_node.lat())),
+                    geometry: Geometry::Point(Point::new(dense_node.lon(), dense_node.lat())),
                 },
             );
         }
@@ -53,7 +53,7 @@ fn build_polygon(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
     way.refs().for_each(|node_id| {
         if let Some(node) = nodes.get(&node_id) {
             match node.geometry {
-                geo::Geometry::Point(point) => {
+                Geometry::Point(point) => {
                     points.push((point.x(), point.y()));
                 }
                 _ => {}
@@ -67,7 +67,7 @@ fn build_polygon(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
             .into_iter()
             .map(|(key, value)| (key.to_string(), value.to_string()))
             .collect(),
-        geometry: geo::Geometry::Polygon(geo::Polygon::new(geo::LineString::from(points), vec![])),
+        geometry: Geometry::Polygon(Polygon::new(LineString::from(points), vec![])),
     }
 }
 
@@ -76,7 +76,7 @@ fn build_line(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
     way.refs().for_each(|node_id| {
         if let Some(node) = nodes.get(&node_id) {
             match node.geometry {
-                geo::Geometry::Point(point) => {
+                Geometry::Point(point) => {
                     points.push((point.x(), point.y()));
                 }
                 _ => {}
@@ -89,7 +89,7 @@ fn build_line(way: &osmpbf::Way, nodes: &HashMap<i64, OsmPbf>) -> OsmPbf {
             .into_iter()
             .map(|(key, value)| (key.to_string(), value.to_string()))
             .collect(),
-        geometry: geo::Geometry::LineString(geo::LineString::from(points)),
+        geometry: Geometry::LineString(LineString::from(points)),
     }
 }
 
@@ -105,7 +105,14 @@ fn build_polys_and_lines(file_path: &str, nodes: &HashMap<i64, OsmPbf>) -> Resul
                 all.push(build_line(&way, &nodes));
             }
         }
-        Element::Relation(relation) => {}
+        #[allow(unused_variables)]
+        Element::Relation(relation) => {
+            // relation.members().into_iter().for_each(|member| {
+            //     if let Some(node) = nodes.get(&member.member_id) {
+            //         println!("{:?}", node);
+            //     }
+            // });
+        }
         _ => {}
     });
 
@@ -113,9 +120,27 @@ fn build_polys_and_lines(file_path: &str, nodes: &HashMap<i64, OsmPbf>) -> Resul
 }
 
 pub fn read_osmpbf(args: &Cli) -> Result<()> {
-
     let nodes = build_nodes(&args.input)?;
     let all = build_polys_and_lines(&args.input, &nodes)?;
 
     Ok(())
+}
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_nodes() {
+        let nodes = build_nodes("examples/osmpbf/monaco-latest.osm.pbf").unwrap();
+        assert_eq!(nodes.len(), 30798);
+    }
+
+    #[test]
+    fn test_build_polys_and_lines() {
+        let nodes = build_nodes("examples/osmpbf/monaco-latest.osm.pbf").unwrap();
+        let all = build_polys_and_lines("examples/osmpbf/monaco-latest.osm.pbf", &nodes).unwrap();
+        assert_eq!(all.len(), 4944);
+    }
 }
