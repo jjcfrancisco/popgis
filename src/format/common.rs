@@ -57,6 +57,7 @@ pub enum AcceptedTypes {
 pub enum FileType {
     Shapefile,
     GeoJson,
+    Osmpbf,
 }
 
 pub fn determine_file_type(input_file: &str) -> Result<FileType> {
@@ -69,6 +70,7 @@ pub fn determine_file_type(input_file: &str) -> Result<FileType> {
     match file_extension_str {
         "shp" => Ok(FileType::Shapefile),
         "geojson" => Ok(FileType::GeoJson),
+        "pbf" => Ok(FileType::Osmpbf),
         _ => Err(Error::UnsupportedFileExtension(
             "❌ Unsupported file type".into(),
         )),

@@ -1,5 +1,5 @@
 use crate::format::common::{determine_file_type, FileType};
-use crate::format::geojson;
+use crate::format::{geojson, osmpbf};
 use crate::format::shapefile;
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 use crate::pg::crud::{check_table_exists, create_schema, create_table, drop_table, get_stmt};
@@ -60,6 +60,11 @@ pub fn run() -> Result<()> {
             geojson::read_geojson(&args)?,
             geojson::determine_data_types(&args.input)?,
         ),
+        FileType::Osmpbf => {
+            // Unimplemented
+            osmpbf::read_osmpbf(&args)?;
+            unimplemented!()
+        }
     };
 
     // If mode not present, check if table exists
