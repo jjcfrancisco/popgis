@@ -8,7 +8,7 @@ use crate::{Error, Result};
 
 use clap::Parser;
 
-/// A blazing fast way to insert GeoJSON & ShapeFiles into a PostGIS database
+/// A blazing fast way to insert GeoJSON, ShapeFiles & OsmPBF into a PostGIS database
 #[derive(Parser, Debug)]
 #[command(about, version)]
 pub struct Cli {
@@ -60,7 +60,10 @@ pub fn run() -> Result<()> {
             geojson::read_geojson(&args)?,
             geojson::determine_data_types(&args.input)?,
         ),
-        FileType::Osmpbf => (osmpbf::read_osmpbf(&args)?, osmpbf::determine_data_types()?),
+        FileType::Osmpbf => {
+            args.srid = Some(4326); // OsmPbf files are always in 4326
+            (osmpbf::read_osmpbf(&args)?, osmpbf::determine_data_types()?)
+        }
     };
 
     // If mode not present, check if table exists

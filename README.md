@@ -1,5 +1,5 @@
 # PopGIS
-A blazing fast way to insert large GeoJSON & ShapeFile into a PostGIS database.
+A blazing fast way to insert large GeoJSON, ShapeFile & OsmPBF into a PostGIS database.
 
 ## Why?
 Importing large datasets into a PostGIS database can take a long time and the aim of PopGIS is to optimize the performance of such operations. **PopGIS is 2x faster than ogr2ogr**, particularly with very large input files against remote databases. Although the performance improvement for smaller datasets may be minimal, the efficiency gains for larger datasets are considerable. For more details, go to the [benchmarks](#benchmarks) section.
@@ -58,6 +58,11 @@ popgis --input spain.geojson \
        --srid 4326 \
        --reproject 3857
 
+popgis --input andalucia-latest.osm.pbf
+       --uri postgresql://my_username:my_password@localhost:5432/my_database \
+       --schema osm \
+       --table andalucia
+
 ```
 
 #### Modes
@@ -84,15 +89,21 @@ Although non extensive, the benchmarking shows **PopGIS is twice faster than ogr
 
 > The file used for this test can be found [here](https://data.cityofnewyork.us/City-Government/NYC-Street-Centerline-CSCL-/exjm-f27b).
 
+### OsmPBF
+Coming soon.
+
 ## Future implementations
 
+* Allow filtering based on a key value pair.
 * Add GeoParquet support.
 * From PostGIS to GeoJSON/ShapeFile.
 * Reintroduce the append mode (temporarily removed in `v0.4.0` due to inconsistent results).
+* Examples to pipe the standard output of `what-osm-pbf` with `PopGIS` as input.
 
 ## Limitations
 
 * PopGIS does not currently support nested GeoJSON properties.
+* When using `osm.pbf`, use the smallest Geofabrik areas to get the best performance - try using it in conjuction with [`what-osm-pbf`](https://crates.io/crates/what-osm-pbf) CLI.
 
 ## License
 See [`LICENSE`](./LICENSE)

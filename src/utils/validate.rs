@@ -1,13 +1,14 @@
-use crate::{Result, Error};
 use super::cli::Cli;
+use crate::{Error, Result};
 use std::path::Path;
 
 // Validate the file path
 pub fn validate_args(args: &Cli) -> Result<()> {
-
     // Check input file exists
     if !Path::new(&args.input).exists() {
-        return Err(Error::FailedValidation("❌ Input file does not exist".into()));
+        return Err(Error::FailedValidation(
+            "❌ Input file does not exist".into(),
+        ));
     }
 
     // Check URL is not empty
@@ -23,12 +24,13 @@ pub fn validate_args(args: &Cli) -> Result<()> {
     // Check if srid is 4326 or 3857
     if let Some(srid) = args.srid {
         if srid != 4326 && srid != 3857 {
-            return Err(Error::FailedValidation("❌ SRID must be 4326 or 3857".into()));
+            return Err(Error::FailedValidation(
+                "❌ SRID must be 4326 or 3857".into(),
+            ));
         }
     }
 
     Ok(())
-
 }
 
 #[cfg(test)]
@@ -45,7 +47,7 @@ mod tests {
             schema: None,
             srid: None,
             mode: None,
-            reproject: None
+            reproject: None,
         };
         assert!(validate_args(&args).is_ok());
     }
@@ -60,7 +62,7 @@ mod tests {
             schema: Some("gis".to_string()),
             srid: Some(4326),
             mode: None,
-            reproject: None
+            reproject: None,
         };
         assert!(validate_args(&args).is_ok());
     }

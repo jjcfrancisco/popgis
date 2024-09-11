@@ -113,10 +113,10 @@ fn build_polys_and_lines(file_path: &str, nodes: &HashMap<i64, OsmPbf>) -> Resul
     Ok(all)
 }
 
-fn osmpbf_to_rows(all: &Vec<OsmPbf>) -> Result<Rows> {
+fn osmpbf_to_rows(all: &[OsmPbf]) -> Result<Rows> {
     let mut rows = Rows::new();
 
-    for item in all.into_iter() {
+    for item in all.iter() {
         let mut row = Row::new();
         // Tags
         row.add(AcceptedTypes::Array(Some(item.tags.clone())));
@@ -131,11 +131,10 @@ fn osmpbf_to_rows(all: &Vec<OsmPbf>) -> Result<Rows> {
 }
 
 pub fn determine_data_types() -> Result<Vec<NewTableTypes>> {
-    let mut data_types: Vec<NewTableTypes> = Vec::new();
-    data_types.push(NewTableTypes {
+    let data_types: Vec<NewTableTypes> = vec![NewTableTypes {
         column_name: "tags".to_string(),
         data_type: Type::TEXT_ARRAY,
-    });
+    }];
 
     Ok(data_types)
 }
