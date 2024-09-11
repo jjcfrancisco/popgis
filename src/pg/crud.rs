@@ -55,6 +55,9 @@ pub fn create_table(
             Type::BOOL => {
                 query.push_str(&format!("{} BOOL,", column.column_name));
             }
+            Type::TEXT_ARRAY => {
+                query.push_str(&format!("{} TEXT[],", column.column_name));
+            }
             _ => println!("❌ Type currently not supported"),
         }
     }
@@ -62,7 +65,7 @@ pub fn create_table(
     query.push_str(");");
 
     // Debugging
-    if std::env::var("DEBUG").is_ok() {
+    if cfg!(debug_assertions) {
         println!("DEBUG || {}", query);
     }
 

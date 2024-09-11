@@ -6,6 +6,7 @@ use std::path::Path;
 use crate::pg::binary_copy::Wkb;
 
 // Struct to hold column name and data type
+#[derive(Debug)]
 pub struct NewTableTypes {
     pub column_name: String,
     pub data_type: Type,
@@ -49,6 +50,7 @@ pub enum AcceptedTypes {
     Double(Option<f32>),
     Text(Option<String>),
     Bool(Option<bool>),
+    Array(Option<Vec<String>>),
     Geometry(Option<Wkb>),
 }
 
