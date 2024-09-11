@@ -73,7 +73,7 @@ pub fn insert_rows(
     let mut writer = BinaryCopyInWriter::new(writer, &types);
 
     // Use to test if types are correct
-    if std::env::var("DEBUG").is_ok() {
+    if cfg!(debug_assertions) {
         println!("DEBUG || {:?}", types);
     }
 
@@ -97,6 +97,9 @@ pub fn insert_rows(
                     tosql.push(value);
                 }
                 AcceptedTypes::Bool(value) => {
+                    tosql.push(value);
+                }
+                AcceptedTypes::Array(value) => {
                     tosql.push(value);
                 }
                 AcceptedTypes::Geometry(value) => {

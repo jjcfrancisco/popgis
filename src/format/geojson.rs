@@ -187,7 +187,16 @@ mod tests {
     #[test]
     fn test_read_geojson() {
         let file_path = "examples/geojson/spain.geojson";
-        let rows = read_geojson(file_path).unwrap();
+        let args = Cli {
+            input: file_path.to_string(),
+            srid: Some(4326),
+            reproject: Some(3857),
+            mode: None,
+            uri: "postgresql://localhost:5432/postgis".to_string(),
+            schema: None,
+            table: "spain".to_string(),
+        };
+        let rows = read_geojson(&args).unwrap();
         assert_eq!(rows.row.len(), 19);
     }
 }

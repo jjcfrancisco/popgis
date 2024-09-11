@@ -1,13 +1,13 @@
 [package]
 name = "popgis"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 homepage = "http://jjcfrancis.co"
 readme = "README.md"
 repository = "https://github.com/jjcfrancisco/popgis"
-description = "A blazing fast way to insert GeoJSON & ShapeFile into a PostGIS database."
-
+description = "A blazing fast way to insert GeoJSON, ShapeFile & OsmPBF into a PostGIS database."
+categories = ["science::geo"]
 
 [dependencies]
 clap = { version = "4.5.8", features = ["derive"] }
@@ -21,3 +21,4 @@ geojson = "0.24.1"
 serde_json = "1.0.120"
 derive_more = "0.99.18"
 proj = "0.27.2"
+osmpbf = "0.3.4"

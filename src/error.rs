@@ -27,6 +27,8 @@ pub enum Error {
     Proj(proj::ProjCreateError),
     #[from]
     ProjTransform(proj::ProjError),
+    #[from]
+    OsmPbf(osmpbf::Error),
 }
 
 // region:    --- Error Boilerplate

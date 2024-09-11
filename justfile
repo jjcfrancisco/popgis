@@ -30,4 +30,11 @@
                  --srid=4326 \
                  --reproject=3857
 
+@try-osmpbf:
+    cargo build --release
+    cd ./target/release/ && ./popgis --input ../../examples/osmpbf/monaco-latest.osm.pbf \
+                 --uri  postgresql://pio:password@localhost:25432/popgis \
+                 --schema osmpbf \
+                 --table monaco \
+
 @set-tags:

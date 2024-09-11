@@ -1,6 +1,6 @@
 use crate::format::common::{determine_file_type, FileType};
-use crate::format::geojson;
 use crate::format::shapefile;
+use crate::format::{geojson, osmpbf};
 use crate::pg::binary_copy::{infer_geom_type, insert_rows};
 use crate::pg::crud::{check_table_exists, create_schema, create_table, drop_table, get_stmt};
 use crate::utils::validate::validate_args;
@@ -8,7 +8,7 @@ use crate::{Error, Result};
 
 use clap::Parser;
 
-/// A blazing fast way to insert GeoJSON & ShapeFiles into a PostGIS database
+/// A blazing fast way to insert GeoJSON, ShapeFiles & OsmPBF into a PostGIS database
 #[derive(Parser, Debug)]
 #[command(about, version)]
 pub struct Cli {
@@ -33,7 +33,7 @@ pub struct Cli {
     pub srid: Option<i32>,
 
     /// Mode: overwrite or fail. Optional.
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "fail")]
     pub mode: Option<String>,
 
     /// Reproject: reproject to 4326 or 3857. Optional.
@@ -60,6 +60,10 @@ pub fn run() -> Result<()> {
             geojson::read_geojson(&args)?,
             geojson::determine_data_types(&args.input)?,
         ),
+        FileType::Osmpbf => {
+            args.srid = Some(4326); // OsmPbf files are always in 4326
+            (osmpbf::read_osmpbf(&args)?, osmpbf::determine_data_types()?)
+        }
     };
 
     // If mode not present, check if table exists
